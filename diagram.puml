@@ -1,0 +1,342 @@
+@startuml
+
+' Core Interfaces
+interface ISettingsManager {
+  <<interface>>
+  +register()
+  +initializeFields()
+  +save()
+  +getValue(key)
+  +setValue(key, value)
+}
+
+interface ISettingsRepository {
+  <<interface>>
+  +get(key)
+  +set(key, value)
+  +delete(key)
+}
+
+interface IField {
+  <<interface>>
+  +render()
+  +validate()
+  +sanitize()
+  +getValue()
+  +setValue()
+  +getKey()
+  +getLabel()
+  +isRequired()
+}
+
+' Field Builder System
+interface IFieldBuilder {
+  <<interface>>
+  +setKey(key)
+  +setLabel(label)
+  +setRequired(required)
+  +setDescription(desc)
+  +addValidationRule(rule)
+  +setDefaultValue(value)
+  +addDependency(dep)
+  +setTransformer(transformer)
+  +setDecorator(decorator)
+  +build(): IField
+}
+
+class AbstractFieldBuilder {
+  #config: array
+  #validationRules: array
+  #dependencies: array
+  +setKey(key)
+  +setLabel(label)
+  +setRequired(required)
+  +setDescription(desc)
+  +addValidationRule(rule)
+  +setDefaultValue(value)
+  +addDependency(dep)
+  +setTransformer(transformer)
+  +setDecorator(decorator)
+  +build()*
+}
+
+class TextFieldBuilder {
+  -placeholder: string
+  -maxLength: int
+  +setPlaceholder(text)
+  +setMaxLength(length)
+  +build()
+}
+
+class SelectFieldBuilder {
+  -options: array
+  +setOptions(options)
+  +addOption(key, value)
+  +build()
+}
+
+class CheckboxFieldBuilder {
+  -checkedValue: mixed
+  -uncheckedValue: mixed
+  +setCheckedValue(value)
+  +setUncheckedValue(value)
+  +build()
+}
+
+' Event System
+interface IFieldEventDispatcher {
+  <<interface>>
+  +dispatch(event, data)
+  +addListener(event, callback)
+  +removeListener(event, callback)
+}
+
+class EventManager {
+  -listeners: array
+  +dispatch(event, data)
+  +addListener(event, callback)
+  +removeListener(event, callback)
+}
+
+' Cache System
+interface ISettingsCache {
+  <<interface>>
+  +get(key)
+  +set(key, value, ttl)
+  +delete(key)
+  +flush()
+}
+
+class WPSettingsCache {
+  -prefix: string
+  +get(key)
+  +set(key, value, ttl)
+  +delete(key)
+  +flush()
+}
+
+' Dependency System
+interface IFieldDependency {
+  <<interface>>
+  +evaluate(field)
+  +getTargetField()
+  +getCondition()
+  +getValue()
+}
+
+class FieldDependency {
+  -targetField: string
+  -condition: string
+  -value: mixed
+  +evaluate(field)
+  +getTargetField()
+  +getCondition()
+  +getValue()
+}
+
+' Validation System
+interface IValidationRule {
+  <<interface>>
+  +validate(value)
+  +getMessage()
+}
+
+class ValidationChain {
+  -validators: array
+  +addValidator(validator: IValidationRule)
+  +validate(value)
+  +getErrors()
+}
+
+class RequiredValidator {
+  +validate(value): bool
+  +getMessage(): string
+}
+
+class LengthValidator {
+  -maxLength: int
+  +__construct(maxLength: int)
+  +validate(value): bool
+  +getMessage(): string
+}
+
+' Permission System
+interface IPermissionManager {
+  <<interface>>
+  +canView(fieldKey)
+  +canEdit(fieldKey)
+  +checkAccess(fieldKey, action)
+}
+
+class WPPermissionManager {
+  -capability: string
+  +canView(fieldKey)
+  +canEdit(fieldKey)
+  +checkAccess(fieldKey, action)
+}
+
+' Context System
+interface IContextManager {
+  <<interface>>
+  +getContext()
+  +setContext(context)
+  +getContextualValue(field)
+}
+
+class WPContextManager {
+  -context: string
+  +getContext()
+  +setContext(context)
+  +getContextualValue(field)
+}
+
+' Template System
+interface ITemplateManager {
+  <<interface>>
+  +saveAsTemplate(name)
+  +loadTemplate(name)
+  +getTemplates()
+}
+
+class WPTemplateManager {
+  -templates: array
+  +saveAsTemplate(name)
+  +loadTemplate(name)
+  +getTemplates()
+}
+
+' Core Classes
+class AbstractField {
+  #key: string
+  #label: string
+  #value: mixed
+  #required: boolean
+  #description: string
+  #validationRules: array
+  #dependencies: array
+  #transformer: IValueTransformer
+  #eventDispatcher: IFieldEventDispatcher
+  #decorator: IFieldDecorator
+  #validationChain: ValidationChain
+  +__construct(config)
+  +render()*
+  +validate()
+  +sanitize()*
+  +getValue()
+  +setValue()
+  +getKey()
+  +getLabel()
+  +isRequired()
+}
+
+class SettingsManager {
+  -repository: ISettingsRepository
+  -cache: ISettingsCache
+  -eventDispatcher: IFieldEventDispatcher
+  -permissionManager: IPermissionManager
+  -contextManager: IContextManager
+  -templateManager: ITemplateManager
+  -wpAdapter: WPSettingsAdapter
+  +register()
+  +initializeFields()
+  +save()
+  +getValue(key)
+  +setValue(key, value)
+}
+
+class FieldFactory {
+  +createBuilder(type): IFieldBuilder
+  +createField(type, config): IField
+}
+
+' Field Types
+class TextField {
+  -placeholder: string
+  -maxLength: int
+  +render()
+  +sanitize()
+}
+
+class SelectField {
+  -options: array
+  +render()
+  +sanitize()
+}
+
+class CheckboxField {
+  -checkedValue: mixed
+  -uncheckedValue: mixed
+  +render()
+  +sanitize()
+}
+
+class TextareaField {
+  -rows: int
+  +render()
+  +sanitize()
+}
+
+class FieldGroup {
+  -fields: IField[]
+  +addField(field: IField)
+  +getFields(): IField[]
+  +render()
+  +validate()
+}
+
+' WordPress Integration
+class WPSettingsAdapter {
+  -slug: string
+  -fields: IField[]
+  +registerSettings()
+  +addSettingsSection(sectionId, title)
+  +addSettingsField(field: IField)
+  +renderField(field: IField)
+}
+
+class WPSettingsRepository {
+  +get(key)
+  +set(key, value)
+  +delete(key)
+}
+
+' Relationships
+ISettingsManager <|.. SettingsManager
+ISettingsRepository <|.. WPSettingsRepository
+IFieldEventDispatcher <|.. EventManager
+ISettingsCache <|.. WPSettingsCache
+IPermissionManager <|.. WPPermissionManager
+IContextManager <|.. WPContextManager
+ITemplateManager <|.. WPTemplateManager
+IFieldBuilder <|.. AbstractFieldBuilder
+AbstractFieldBuilder <|-- TextFieldBuilder
+AbstractFieldBuilder <|-- SelectFieldBuilder
+AbstractFieldBuilder <|-- CheckboxFieldBuilder
+IField <|.. AbstractField
+AbstractField <|-- TextField
+AbstractField <|-- SelectField
+AbstractField <|-- CheckboxField
+AbstractField <|-- TextareaField
+AbstractField <|-- FieldGroup
+
+SettingsManager o--> ISettingsRepository
+SettingsManager o--> ISettingsCache
+SettingsManager o--> IFieldEventDispatcher
+SettingsManager o--> IPermissionManager
+SettingsManager o--> IContextManager
+SettingsManager o--> ITemplateManager
+SettingsManager o--> WPSettingsAdapter
+
+AbstractField o--> IFieldEventDispatcher
+AbstractField o--> ValidationChain
+AbstractField o--> IFieldDependency
+ValidationChain o--> IValidationRule
+IValidationRule <|.. RequiredValidator
+IValidationRule <|.. LengthValidator
+
+FieldFactory --> IFieldBuilder
+AbstractFieldBuilder --> AbstractField
+FieldGroup o--> IField
+WPSettingsAdapter --> IField
+
+@enduml

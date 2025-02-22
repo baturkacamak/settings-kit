@@ -1,0 +1,19 @@
+{
+    "name": "baturkacamak/wp-settings-kit",
+    "description": "A comprehensive settings management kit for PHP applications",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "SettingsManager\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SettingsManager\\Tests\\": "tests/"
+        }
+    }
+}
