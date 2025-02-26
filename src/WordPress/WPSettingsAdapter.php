@@ -2,7 +2,7 @@
 
 namespace WPSettingsKit\WordPress;
 
-use  WPSettingsKit\Field\Interface\IField;
+use WPSettingsKit\Field\Base\Interface\IField;
 
 /**
  * WordPress settings page adapter

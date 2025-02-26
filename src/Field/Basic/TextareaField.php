@@ -1,6 +1,8 @@
 <?php
 
-namespace WPSettingsKit\Field;
+namespace WPSettingsKit\Field\Basic;
+
+use WPSettingsKit\Field\Base\AbstractField;
 
 /**
  * Textarea field implementation

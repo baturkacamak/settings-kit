@@ -2,8 +2,8 @@
 
 namespace WPSettingsKit\Builder;
 
-use WPSettingsKit\Field\CheckboxField;
-use  WPSettingsKit\Field\Interface\IField;
+use WPSettingsKit\Field\Base\Interface\IField;
+use WPSettingsKit\Field\Basic\CheckboxField;
 
 /**
  * Builder for checkbox fields

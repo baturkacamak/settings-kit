@@ -1,8 +1,9 @@
 <?php
 
-namespace WPSettingsKit\Field;
+namespace WPSettingsKit\Field\Renderer;
 
-use WPSettingsKit\Field\Interface\IFieldRenderer;
+use WPSettingsKit\Field\Base\AbstractField;
+use WPSettingsKit\Field\Base\Interface\IFieldRenderer;
 
 /**
  * Renders input fields such as text or checkbox.

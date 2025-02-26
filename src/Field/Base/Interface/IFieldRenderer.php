@@ -1,8 +1,8 @@
 <?php
 
-namespace WPSettingsKit\Field\Interface;
+namespace WPSettingsKit\Field\Base\Interface;
 
-use WPSettingsKit\Field\AbstractField;
+use WPSettingsKit\Field\Base\AbstractField;
 
 /**
  * Interface for rendering field HTML markup.

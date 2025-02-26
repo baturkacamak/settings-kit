@@ -2,7 +2,7 @@
 
 namespace WPSettingsKit\Decorator;
 
-use  WPSettingsKit\Field\Interface\IField;
+use WPSettingsKit\Field\Base\Interface\IField;
 
 /**
  * Wraps field in a container with label and description

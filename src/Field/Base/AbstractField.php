@@ -1,13 +1,15 @@
 <?php
 
-namespace WPSettingsKit\Field;
+namespace WPSettingsKit\Field\Base;
 
 use WPSettingsKit\Decorator\Interface\IFieldDecorator;
 use WPSettingsKit\Event\EventManager;
 use WPSettingsKit\Event\Interface\IFieldEventDispatcher;
 use WPSettingsKit\Exception\ValidationException;
-use WPSettingsKit\Field\Interface\IField;
-use WPSettingsKit\Field\Interface\IFieldRenderer;
+use WPSettingsKit\Field\Base\Interface\IField;
+use WPSettingsKit\Field\Base\Interface\IFieldRenderer;
+use WPSettingsKit\Field\IFieldDependency;
+use WPSettingsKit\Field\IValidationRule;
 use WPSettingsKit\Validation\Interface\IValueTransformer;
 use WPSettingsKit\Validation\ValidationChain;
 

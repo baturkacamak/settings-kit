@@ -1,6 +1,6 @@
 <?php
 
-namespace  WPSettingsKit\Field\Interface;
+namespace  WPSettingsKit\Field\Base\Interface;
 
 /**
  * Interface for field implementations

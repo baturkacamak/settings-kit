@@ -3,7 +3,7 @@
 namespace WPSettingsKit\Dependency;
 
 use WPSettingsKit\Dependency\Interface\IFieldDependency;
-use WPSettingsKit\Field\Interface\IField;
+use WPSettingsKit\Field\Base\Interface\IField;
 
 /**
  * Defines a dependency between fields, controlling visibility or behavior based on another field's value.

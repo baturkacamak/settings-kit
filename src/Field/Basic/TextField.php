@@ -1,8 +1,10 @@
 <?php
 
-namespace WPSettingsKit\Field;
+namespace WPSettingsKit\Field\Basic;
 
-use WPSettingsKit\Field\Interface\IFieldRenderer;
+use WPSettingsKit\Field\Base\AbstractField;
+use WPSettingsKit\Field\Base\Interface\IFieldRenderer;
+use WPSettingsKit\Field\Renderer\InputRenderer;
 
 /**
  * Text input field implementation.

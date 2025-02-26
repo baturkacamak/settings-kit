@@ -1,9 +1,10 @@
 <?php
 
-namespace WPSettingsKit\Field;
+namespace WPSettingsKit\Field\Basic;
 
 use WPSettingsKit\Exception\ValidationException;
-use WPSettingsKit\Field\Interface\IField;
+use WPSettingsKit\Field\Base\AbstractField;
+use WPSettingsKit\Field\Base\Interface\IField;
 
 /**
  * Field group implementation

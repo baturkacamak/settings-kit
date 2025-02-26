@@ -2,13 +2,13 @@
 
 namespace WPSettingsKit\Builder;
 
-use  WPSettingsKit\Builder\Interface\IFieldBuilder;
-use  WPSettingsKit\Decorator\Interface\IFieldDecorator;
-use  WPSettingsKit\Dependency\Interface\IFieldDependency;
+use WPSettingsKit\Builder\Interface\IFieldBuilder;
+use WPSettingsKit\Decorator\Interface\IFieldDecorator;
+use WPSettingsKit\Dependency\Interface\IFieldDependency;
 use WPSettingsKit\Exception\BuilderException;
-use  WPSettingsKit\Field\Interface\IField;
-use  WPSettingsKit\Validation\Interface\IValidationRule;
-use  WPSettingsKit\Validation\Interface\IValueTransformer;
+use WPSettingsKit\Field\Base\Interface\IField;
+use WPSettingsKit\Validation\Interface\IValidationRule;
+use WPSettingsKit\Validation\Interface\IValueTransformer;
 
 /**
  * Abstract base class for field builders

@@ -2,11 +2,11 @@
 
 namespace  WPSettingsKit\Builder\Interface;
 
-use  WPSettingsKit\Decorator\Interface\IFieldDecorator;
-use  WPSettingsKit\Dependency\Interface\IFieldDependency;
-use  WPSettingsKit\Field\Interface\IField;
-use  WPSettingsKit\Validation\Interface\IValidationRule;
-use  WPSettingsKit\Validation\Interface\IValueTransformer;
+use WPSettingsKit\Decorator\Interface\IFieldDecorator;
+use WPSettingsKit\Dependency\Interface\IFieldDependency;
+use WPSettingsKit\Field\Base\Interface\IField;
+use WPSettingsKit\Validation\Interface\IValidationRule;
+use WPSettingsKit\Validation\Interface\IValueTransformer;
 
 /**
  * Interface for field builder

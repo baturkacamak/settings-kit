@@ -12,7 +12,7 @@ use WPSettingsKit\Exception\CacheException;
 use WPSettingsKit\Exception\RepositoryException;
 use WPSettingsKit\Exception\SettingsException;
 use WPSettingsKit\Exception\ValidationException;
-use WPSettingsKit\Field\Interface\IField;
+use WPSettingsKit\Field\Base\Interface\IField;
 use WPSettingsKit\Manager\Interface\ISettingsManager;
 use WPSettingsKit\Permission\Interface\IPermissionManager;
 use WPSettingsKit\Permission\WPPermissionManager;

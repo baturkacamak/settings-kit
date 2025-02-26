@@ -2,7 +2,7 @@
 
 namespace   WPSettingsKit\Decorator\Interface;
 
-use  WPSettingsKit\Field\Interface\IField;
+use WPSettingsKit\Field\Base\Interface\IField;
 
 interface IFieldDecorator {
     /**

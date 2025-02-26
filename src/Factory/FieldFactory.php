@@ -4,9 +4,9 @@ namespace  WPSettingsKit\Factory;
 
 use SelectFieldBuilder;
 use WPSettingsKit\Builder\CheckboxFieldBuilder;
+use WPSettingsKit\Builder\Interface\IFieldBuilder;
 use WPSettingsKit\Builder\TextFieldBuilder;
-use  WPSettingsKit\Builder\Interface\IFieldBuilder;
-use  WPSettingsKit\Field\Interface\IField;
+use WPSettingsKit\Field\Base\Interface\IField;
 
 /**
  * Factory for creating field builders

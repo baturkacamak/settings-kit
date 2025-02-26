@@ -3,8 +3,8 @@
 namespace  WPSettingsKit\Factory\Interface;
 
 
+use WPSettingsKit\Field\Base\Interface\IField;
 use WPSettingsKit\Interface\IFieldBuilder;
-use  WPSettingsKit\Field\Interface\IField;
 
 interface IFieldFactory {
     /**

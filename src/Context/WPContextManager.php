@@ -2,8 +2,8 @@
 
 namespace WPSettingsKit\Context;
 
-use  WPSettingsKit\Context\Interface\IContextManager;
-use  WPSettingsKit\Field\Interface\IField;
+use WPSettingsKit\Context\Interface\IContextManager;
+use WPSettingsKit\Field\Base\Interface\IField;
 
 /**
  * WordPress-specific context manager implementation

@@ -2,7 +2,7 @@
 
 namespace   WPSettingsKit\Context\Interface;
 
-use  WPSettingsKit\Field\Interface\IField;
+use WPSettingsKit\Field\Base\Interface\IField;
 
 interface IContextManager {
     /**

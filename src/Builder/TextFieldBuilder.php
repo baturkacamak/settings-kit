@@ -2,8 +2,8 @@
 
 namespace WPSettingsKit\Builder;
 
-use WPSettingsKit\Field\TextField;
-use  WPSettingsKit\Field\Interface\IField;
+use WPSettingsKit\Field\Base\Interface\IField;
+use WPSettingsKit\Field\Basic\TextField;
 
 /**
  * Builder for text fields
