@@ -2,6 +2,8 @@
 
 namespace WPSettingsKit\Field;
 
+use WPSettingsKit\Field\Interface\IFieldRenderer;
+
 /**
  * Checkbox field implementation
  *
@@ -26,9 +28,22 @@ class CheckboxField extends AbstractField
      */
     public function __construct(array $config)
     {
-        parent::__construct($config);
-        $this->checkedValue = $config['checked_value'] ?? true;
+        $this->checkedValue   = $config['checked_value'] ?? true;
         $this->uncheckedValue = $config['unchecked_value'] ?? false;
+
+        parent::__construct(
+            $config['key'] ?? '',
+            $config['label'] ?? '',
+            $config['value'] ?? null,
+            $config['required'] ?? false,
+            $config['description'] ?? '',
+            $config['validation_rules'] ?? [],
+            $config['dependencies'] ?? [],
+            $config['transformer'] ?? null,
+            $config['decorator'] ?? null,
+            $config['event_dispatcher'] ?? null,
+            $config['renderer'] ?? null
+        );
     }
 
     /**
@@ -39,12 +54,12 @@ class CheckboxField extends AbstractField
     public function render(): string
     {
         $attributes = [
-            'type' => 'checkbox',
-            'name' => $this->getKey(),
-            'id' => $this->getKey(),
-            'value' => $this->checkedValue,
-            'class' => 'regular-checkbox',
-            'checked' => $this->getValue() == $this->checkedValue ? 'checked' : null,
+            'type'     => 'checkbox',
+            'name'     => $this->getKey(),
+            'id'       => $this->getKey(),
+            'value'    => $this->checkedValue,
+            'class'    => 'regular-checkbox',
+            'checked'  => $this->getValue() == $this->checkedValue ? 'checked' : null,
             'required' => $this->isRequired() ? 'required' : null,
         ];
 
@@ -68,5 +83,15 @@ class CheckboxField extends AbstractField
     public function sanitize(): mixed
     {
         return $this->getValue() == $this->checkedValue ? $this->checkedValue : $this->uncheckedValue;
+    }
+
+    /**
+     * Provides the default renderer for the checkbox field.
+     *
+     * @return IFieldRenderer The default renderer instance.
+     */
+    protected function getDefaultRenderer(): IFieldRenderer
+    {
+        return new InputRenderer();
     }
 }

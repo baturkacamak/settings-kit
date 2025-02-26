@@ -8,12 +8,12 @@
     },
     "autoload": {
         "psr-4": {
-            "SettingsManager\\": "src/"
+            "WPSettingsKit\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "SettingsManager\\Tests\\": "tests/"
+            "WPSettingsKit\\Tests\\": "tests/"
         }
     }
 }

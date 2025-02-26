@@ -43,7 +43,7 @@ class WPSettingsAdapter {
      * Add a settings section
      */
     public function addSettingsSection(string $sectionId, string $title): void {
-        add_settings_section(
+        \add_settings_section(
             $sectionId,
             $title,
             null,

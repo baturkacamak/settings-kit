@@ -1,14 +1,15 @@
 <?php
 
-namespace WPSettingsKit;
+namespace WPSettingsKit\WordPress;
 
 use WPSettingsKit\Exception\RepositoryException;
-use  WPSettingsKit\WordPress\Interface\ISettingsRepository;
+use WPSettingsKit\WordPress\Interface\ISettingsRepository;
 
 /**
  * WordPress options-based settings repository implementation
  */
-class WPSettingsRepository implements ISettingsRepository {
+class WPSettingsRepository implements ISettingsRepository
+{
     private string $prefix;
     private bool $autoload;
     private bool $isNetwork;
@@ -22,11 +23,12 @@ class WPSettingsRepository implements ISettingsRepository {
      */
     public function __construct(
         string $prefix = 'settings_',
-        bool $autoload = true,
-        bool $isNetwork = false
-    ) {
-        $this->prefix = $prefix;
-        $this->autoload = $autoload;
+        bool   $autoload = true,
+        bool   $isNetwork = false
+    )
+    {
+        $this->prefix    = $prefix;
+        $this->autoload  = $autoload;
         $this->isNetwork = $isNetwork;
     }
 
@@ -46,7 +48,7 @@ class WPSettingsRepository implements ISettingsRepository {
     public function set(string $key, mixed $value): bool
     {
         $optionName = $this->prefix . $key;
-        $result = $this->isNetwork
+        $result     = $this->isNetwork
             ? update_site_option($optionName, $value)
             : update_option($optionName, $value, $this->autoload);
         if (!$result) {
@@ -62,7 +64,7 @@ class WPSettingsRepository implements ISettingsRepository {
     public function delete(string $key): bool
     {
         $optionName = $this->prefix . $key;
-        $result = $this->isNetwork ? delete_site_option($optionName) : delete_option($optionName);
+        $result     = $this->isNetwork ? delete_site_option($optionName) : delete_option($optionName);
         if (!$result) {
             throw new RepositoryException("Failed to delete setting for key: {$key}");
         }
@@ -74,10 +76,11 @@ class WPSettingsRepository implements ISettingsRepository {
      *
      * @return bool
      */
-    public function deleteAll(): bool {
+    public function deleteAll(): bool
+    {
         global $wpdb;
 
-        $table = $this->isNetwork ? $wpdb->sitemeta : $wpdb->options;
+        $table     = $this->isNetwork ? $wpdb->sitemeta : $wpdb->options;
         $keyColumn = $this->isNetwork ? 'meta_key' : 'option_name';
 
         $sql = $wpdb->prepare(
@@ -100,11 +103,12 @@ class WPSettingsRepository implements ISettingsRepository {
      *
      * @return array
      */
-    public function getAll(): array {
+    public function getAll(): array
+    {
         global $wpdb;
 
-        $table = $this->isNetwork ? $wpdb->sitemeta : $wpdb->options;
-        $keyColumn = $this->isNetwork ? 'meta_key' : 'option_name';
+        $table       = $this->isNetwork ? $wpdb->sitemeta : $wpdb->options;
+        $keyColumn   = $this->isNetwork ? 'meta_key' : 'option_name';
         $valueColumn = $this->isNetwork ? 'meta_value' : 'option_value';
 
         $sql = $wpdb->prepare(
@@ -112,11 +116,11 @@ class WPSettingsRepository implements ISettingsRepository {
             $wpdb->esc_like($this->prefix) . '%'
         );
 
-        $results = $wpdb->get_results($sql);
+        $results  = $wpdb->get_results($sql);
         $settings = [];
 
         foreach ($results as $row) {
-            $key = substr($row->$keyColumn, strlen($this->prefix));
+            $key            = substr($row->$keyColumn, strlen($this->prefix));
             $settings[$key] = maybe_unserialize($row->$valueColumn);
         }
 
@@ -129,7 +133,8 @@ class WPSettingsRepository implements ISettingsRepository {
      * @param string $key
      * @return bool
      */
-    public function exists(string $key): bool {
+    public function exists(string $key): bool
+    {
         $optionName = $this->prefix . $key;
 
         if ($this->isNetwork) {
@@ -144,7 +149,8 @@ class WPSettingsRepository implements ISettingsRepository {
      *
      * @return string
      */
-    public function getPrefix(): string {
+    public function getPrefix(): string
+    {
         return $this->prefix;
     }
 
@@ -153,7 +159,8 @@ class WPSettingsRepository implements ISettingsRepository {
      *
      * @return bool
      */
-    public function isNetwork(): bool {
+    public function isNetwork(): bool
+    {
         return $this->isNetwork;
     }
 
@@ -162,7 +169,8 @@ class WPSettingsRepository implements ISettingsRepository {
      *
      * @return bool
      */
-    public function isAutoload(): bool {
+    public function isAutoload(): bool
+    {
         return $this->autoload;
     }
 }

@@ -2,6 +2,8 @@
 
 namespace WPSettingsKit\Field;
 
+use WPSettingsKit\Field\Interface\IFieldRenderer;
+
 /**
  * Text input field implementation.
  */
@@ -65,9 +67,9 @@ class TextField extends AbstractField
     /**
      * Sanitizes the text field value.
      *
-     * @return mixed The sanitized value.
+     * @return string The sanitized value.
      */
-    public function sanitize(): mixed
+    public function sanitize(): string
     {
         return sanitize_text_field($this->getValue());
     }
