@@ -197,7 +197,7 @@ abstract class AbstractField implements IField
      * @param array<string, mixed> $attributes Base attributes for the field.
      * @return string The complete attribute string.
      */
-    protected function buildAttributeString(array $attributes): string
+    public function buildAttributeString(array $attributes): string
     {
         $pairs = [];
         foreach ($attributes as $key => $value) {
