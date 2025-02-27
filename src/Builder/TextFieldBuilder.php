@@ -14,6 +14,7 @@ use WPSettingsKit\Builder\Decorator\TextField\PlaceholderDecorator;
 use WPSettingsKit\Builder\Decorator\TextField\ReadonlyDecorator;
 use WPSettingsKit\Field\Base\Interface\IField;
 use WPSettingsKit\Field\Basic\TextField;
+use WPSettingsKit\Validation\Interface\IValidationRule;
 
 /**
  * Builder for text fields using decorator pattern
@@ -32,25 +33,39 @@ class TextFieldBuilder extends BaseFieldBuilder
     }
 
     /**
-     * Set maximum length
+     * Set maximum length and add corresponding validator
      *
      * @param int $maxLength Maximum character length
      * @return self
      */
     public function setMaxLength(int $maxLength): self
     {
-        return $this->addDecorator(new MaxLengthDecorator($maxLength));
+        $this->addDecorator(new MaxLengthDecorator($maxLength));
+
+        // Automatically add validation rule
+        if ($maxLength > 0) {
+            $this->addValidationRule(new LengthValidator($maxLength));
+        }
+
+        return $this;
     }
 
     /**
-     * Set minimum length
+     * Set minimum length and add corresponding validator
      *
      * @param int $minLength Minimum character length
      * @return self
      */
     public function setMinLength(int $minLength): self
     {
-        return $this->addDecorator(new MinLengthDecorator($minLength));
+        $this->addDecorator(new MinLengthDecorator($minLength));
+
+        // Automatically add validation rule for minimum length
+        if ($minLength > 0) {
+            $this->addValidationRule(new MinLengthValidator($minLength));
+        }
+
+        return $this;
     }
 
     /**

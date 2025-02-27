@@ -5,6 +5,7 @@ namespace WPSettingsKit\Builder;
 use WPSettingsKit\Builder\Interface\IFieldBuilder;
 use WPSettingsKit\Builder\Interface\IFieldBuilderDecorator;
 use WPSettingsKit\Exception\BuilderException;
+use WPSettingsKit\Validation\Interface\IValidationRule;
 
 /**
  * Base field builder with decorator support
@@ -66,5 +67,21 @@ abstract class BaseFieldBuilder implements IFieldBuilder
         }
 
         return $finalConfig;
+    }
+
+    /**
+     * Add a validation rule
+     *
+     * @param IValidationRule $rule
+     * @return self
+     */
+    public function addValidationRule(IValidationRule $rule): self
+    {
+        if (!isset($this->config['validation_rules'])) {
+            $this->config['validation_rules'] = [];
+        }
+
+        $this->config['validation_rules'][] = $rule;
+        return $this;
     }
 }
