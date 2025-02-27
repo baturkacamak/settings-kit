@@ -7,26 +7,26 @@ use WPSettingsKit\Field\Base\Interface\IFieldRenderer;
 use WPSettingsKit\Field\Renderer\InputRenderer;
 
 /**
- * Text input field implementation.
+ * Enhanced text input field implementation.
  */
 class TextField extends AbstractField
 {
-    /**
-     * @var string The placeholder text for the field.
-     */
-    protected string $placeholder;
-
-    /**
-     * @var int The maximum length of the input.
-     */
-    protected int $maxLength;
-
-    /**
-     * Constructor for TextField.
-     *
-     * @param array<string, mixed> $config Configuration array for the text field.
-     */
-    public function __construct(array $config)
+    public function __construct(
+        array            $config,
+        protected string $placeholder = '',
+        protected int    $maxLength = 0,
+        protected int    $minLength = 0,
+        protected string $pattern = '',
+        protected string $inputMode = 'text',
+        protected string $autocomplete = '',
+        protected bool   $readonly = false,
+        protected bool   $disabled = false,
+        protected int    $size = 0,
+        protected string $prefix = '',
+        protected string $suffix = '',
+        protected string $cssClass = '',
+        protected string $inputType = 'text'
+    )
     {
         parent::__construct(
             $config['key'],
@@ -41,45 +41,90 @@ class TextField extends AbstractField
             $config['event_dispatcher'] ?? null,
             $config['renderer'] ?? null
         );
-        $this->placeholder = $config['placeholder'] ?? '';
-        $this->maxLength   = $config['max_length'] ?? 0;
+
+        $this->placeholder  = $config['placeholder'] ?? '';
+        $this->maxLength    = $config['max_length'] ?? 0;
+        $this->minLength    = $config['min_length'] ?? 0;
+        $this->pattern      = $config['pattern'] ?? '';
+        $this->inputMode    = $config['input_mode'] ?? 'text';
+        $this->autocomplete = $config['autocomplete'] ?? '';
+        $this->readonly     = $config['readonly'] ?? false;
+        $this->disabled     = $config['disabled'] ?? false;
+        $this->size         = $config['size'] ?? 0;
+        $this->prefix       = $config['prefix'] ?? '';
+        $this->suffix       = $config['suffix'] ?? '';
+        $this->cssClass     = $config['css_class'] ?? '';
+        $this->inputType    = $config['input_type'] ?? 'text';
     }
 
     /**
      * Renders the text field as HTML.
-     *
-     * @return string The rendered HTML markup.
      */
     public function render(): string
     {
+        $classes = ['regular-text'];
+        if ($this->cssClass) {
+            $classes[] = $this->cssClass;
+        }
+
         $attributes = [
-            'type'        => 'text',
-            'name'        => $this->getKey(),
-            'id'          => $this->getKey(),
-            'value'       => htmlspecialchars($this->getValue() ?? ''),
-            'class'       => 'regular-text',
-            'placeholder' => $this->placeholder ? htmlspecialchars($this->placeholder) : null,
-            'maxlength'   => $this->maxLength > 0 ? $this->maxLength : null,
-            'required'    => $this->isRequired() ? 'required' : null,
+            'type'         => $this->inputType,
+            'name'         => $this->getKey(),
+            'id'           => $this->getKey(),
+            'value'        => htmlspecialchars($this->getValue() ?? ''),
+            'class'        => implode(' ', $classes),
+            'placeholder'  => $this->placeholder ? htmlspecialchars($this->placeholder) : null,
+            'maxlength'    => $this->maxLength > 0 ? $this->maxLength : null,
+            'minlength'    => $this->minLength > 0 ? $this->minLength : null,
+            'pattern'      => $this->pattern ?: null,
+            'inputmode'    => $this->inputMode ?: null,
+            'autocomplete' => $this->autocomplete ?: null,
+            'readonly'     => $this->readonly ? 'readonly' : null,
+            'disabled'     => $this->disabled ? 'disabled' : null,
+            'size'         => $this->size > 0 ? $this->size : null,
+            'required'     => $this->isRequired() ? 'required' : null,
         ];
 
-        return $this->renderer->render($this, $attributes);
+        // PHP 8.1+ null safe operator kullanımı ve string interpolation
+        $html = '';
+
+        // Add prefix if present
+        if ($this->prefix) {
+            $html .= "<span class=\"field-prefix\">{$this->prefix}</span>";
+        }
+
+        // Add the input element
+        $html .= $this->renderer->render($this, $attributes);
+
+        // Add suffix if present
+        if ($this->suffix) {
+            $html .= "<span class=\"field-suffix\">{$this->suffix}</span>";
+        }
+
+        return $html;
     }
 
     /**
      * Sanitizes the text field value.
-     *
-     * @return string The sanitized value.
      */
     public function sanitize(): string
     {
-        return sanitize_text_field($this->getValue());
+        $value = $this->getValue();
+
+        if (is_null($value)) {
+            return '';
+        }
+
+        return match ($this->inputType) {
+            'email' => sanitize_email($value),
+            'url' => esc_url_raw($value),
+            'number' => is_numeric($value) ? (string)floatval($value) : '',
+            default => sanitize_text_field($value),
+        };
     }
 
     /**
      * Provides the default renderer for the text field.
-     *
-     * @return IFieldRenderer The default renderer instance.
      */
     protected function getDefaultRenderer(): IFieldRenderer
     {
