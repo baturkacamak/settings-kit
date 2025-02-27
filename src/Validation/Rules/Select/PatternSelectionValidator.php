@@ -1,8 +1,8 @@
 <?php
 
-namespace WPSettingsKit\Validation\SelectField;
+namespace WPSettingsKit\Validation\Rules\SelectField;
 
-use WPSettingsKit\Validation\Interface\IValidationRule;
+use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that a selection matches a specific pattern or format.

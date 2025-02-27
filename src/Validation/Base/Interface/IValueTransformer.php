@@ -1,6 +1,6 @@
 <?php
 
-namespace  WPSettingsKit\Validation\Interface;
+namespace  WPSettingsKit\Validation\Base\Interface;
 
 interface IValueTransformer
 {

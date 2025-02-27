@@ -10,7 +10,7 @@ use WPSettingsKit\Field\Base\Interface\IField;
 use WPSettingsKit\Field\Base\Interface\IFieldRenderer;
 use WPSettingsKit\Field\IFieldDependency;
 use WPSettingsKit\Field\IValidationRule;
-use WPSettingsKit\Validation\Interface\IValueTransformer;
+use WPSettingsKit\Validation\Base\Interface\IValueTransformer;
 use WPSettingsKit\Validation\ValidationChain;
 
 /**

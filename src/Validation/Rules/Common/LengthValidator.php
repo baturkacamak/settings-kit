@@ -1,8 +1,8 @@
 <?php
 
-namespace WPSettingsKit\Validation;
+namespace WPSettingsKit\Validation\Rules\Common;
 
-use WPSettingsKit\Validation\Interface\IValidationRule;
+use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that a string value does not exceed a specified maximum length.

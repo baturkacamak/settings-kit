@@ -1,8 +1,8 @@
 <?php
 
-namespace WPSettingsKit\Validation;
+namespace WPSettingsKit\Validation\Rules\Text;
 
-use WPSettingsKit\Validation\Interface\IValidationRule;
+use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that a string represents a valid IP address.

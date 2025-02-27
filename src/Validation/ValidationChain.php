@@ -2,7 +2,7 @@
 
 namespace WPSettingsKit\Validation;
 
-use WPSettingsKit\Validation\Interface\IValidationRule;
+use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Chains multiple validation rules together and applies them to a value.

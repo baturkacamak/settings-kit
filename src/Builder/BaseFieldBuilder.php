@@ -5,7 +5,7 @@ namespace WPSettingsKit\Builder;
 use WPSettingsKit\Builder\Interface\IFieldBuilder;
 use WPSettingsKit\Builder\Interface\IFieldBuilderDecorator;
 use WPSettingsKit\Exception\BuilderException;
-use WPSettingsKit\Validation\Interface\IValidationRule;
+use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Base field builder with decorator support

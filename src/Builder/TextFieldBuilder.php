@@ -14,7 +14,6 @@ use WPSettingsKit\Builder\Decorator\TextField\PlaceholderDecorator;
 use WPSettingsKit\Builder\Decorator\TextField\ReadonlyDecorator;
 use WPSettingsKit\Field\Base\Interface\IField;
 use WPSettingsKit\Field\Basic\TextField;
-use WPSettingsKit\Validation\Interface\IValidationRule;
 
 /**
  * Builder for text fields using decorator pattern

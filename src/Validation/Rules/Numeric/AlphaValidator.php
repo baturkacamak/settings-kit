@@ -1,8 +1,8 @@
 <?php
 
-namespace WPSettingsKit\Validation;
+namespace WPSettingsKit\Validation\Rules\Numeric;
 
-use WPSettingsKit\Validation\Interface\IValidationRule;
+use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that a string contains only alphabetic characters.
