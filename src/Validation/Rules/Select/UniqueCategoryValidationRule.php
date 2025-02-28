@@ -2,12 +2,18 @@
 
 namespace WPSettingsKit\Validation\Rules\SelectField;
 
+use WPSettingsKit\Attribute\ValidationRule;
 use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that the selected options represent unique categories.
  */
-class UniqueCategoryValidator implements IValidationRule
+#[ValidationRule(
+    type: ['select', 'checkbox'],
+    method: 'addUniqueCategoryValidation',
+    priority: 60
+)]
+class UniqueCategoryValidationRule implements IValidationRule
 {
     /**
      * @var array<string, string> Map of option values to their category
@@ -20,15 +26,33 @@ class UniqueCategoryValidator implements IValidationRule
     private int $maxPerCategory;
 
     /**
+     * @var string Custom error message
+     */
+    private readonly string $customMessage;
+
+    /**
      * Constructor for UniqueCategoryValidator.
      *
      * @param array<string, string> $categoryMap Map of option values to their category
      * @param int $maxPerCategory Maximum selections allowed per category
+     * @param string|null $customMessage Optional custom error message
      */
-    public function __construct(array $categoryMap, int $maxPerCategory = 1)
+    public function __construct(
+        array   $categoryMap,
+        int     $maxPerCategory = 1,
+        ?string $customMessage = null
+    )
     {
-        $this->categoryMap = $categoryMap;
+        $this->categoryMap    = $categoryMap;
         $this->maxPerCategory = $maxPerCategory;
+
+        $this->customMessage = $customMessage ?? ($maxPerCategory === 1
+            ? __('You can only select one option from each category.', 'wp-settings-kit')
+            : sprintf(
+                __('You can only select up to %d options from each category.', 'wp-settings-kit'),
+                $maxPerCategory
+            )
+        );
     }
 
     /**
@@ -63,24 +87,18 @@ class UniqueCategoryValidator implements IValidationRule
             }
         }
 
-        return true;
+        $result = true;
+        return apply_filters('wp_settings_unique_category_validator_result', $result, $value, $this->categoryMap, $this->maxPerCategory);
     }
 
     /**
      * Gets the error message for when validation fails.
      *
-     * @return string The error message indicating category limit is exceeded
+     * @return string The error message
      */
     public function getMessage(): string
     {
-        if ($this->maxPerCategory === 1) {
-            return __('You can only select one option from each category.', 'settings-manager');
-        }
-
-        return sprintf(
-            __('You can only select up to %d options from each category.', 'settings-manager'),
-            $this->maxPerCategory
-        );
+        return apply_filters('wp_settings_unique_category_validator_message', $this->customMessage);
     }
 
     /**
@@ -101,8 +119,9 @@ class UniqueCategoryValidator implements IValidationRule
     public function getParameters(): array
     {
         return [
-            'categoryMap' => $this->categoryMap,
-            'maxPerCategory' => $this->maxPerCategory
+            'categoryMap'    => $this->categoryMap,
+            'maxPerCategory' => $this->maxPerCategory,
+            'customMessage'  => $this->customMessage,
         ];
     }
 }

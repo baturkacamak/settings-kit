@@ -2,12 +2,18 @@
 
 namespace WPSettingsKit\Validation\Rules\SelectField;
 
+use WPSettingsKit\Attribute\ValidationRule;
 use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that at least one selection from each required category is made.
  */
-class RequiredCategoriesValidator implements IValidationRule
+#[ValidationRule(
+    type: ['select', 'checkbox'],
+    method: 'addRequiredCategoriesValidation',
+    priority: 55
+)]
+class RequiredCategoriesValidationRule implements IValidationRule
 {
     /**
      * @var array<string, string> Map of option values to their category
@@ -20,15 +26,30 @@ class RequiredCategoriesValidator implements IValidationRule
     private array $requiredCategories;
 
     /**
+     * @var string Custom error message
+     */
+    private readonly string $customMessage;
+
+    /**
      * Constructor for RequiredCategoriesValidator.
      *
      * @param array<string, string> $categoryMap Map of option values to their category
      * @param array<string> $requiredCategories List of categories that must have selections
+     * @param string|null $customMessage Optional custom error message
      */
-    public function __construct(array $categoryMap, array $requiredCategories)
+    public function __construct(
+        array   $categoryMap,
+        array   $requiredCategories,
+        ?string $customMessage = null
+    )
     {
         $this->categoryMap        = $categoryMap;
         $this->requiredCategories = $requiredCategories;
+
+        $this->customMessage = $customMessage ?? sprintf(
+            __('You must select at least one option from each of these categories: %s', 'wp-settings-kit'),
+            implode(', ', $requiredCategories)
+        );
     }
 
     /**
@@ -72,14 +93,11 @@ class RequiredCategoriesValidator implements IValidationRule
     /**
      * Gets the error message for when validation fails.
      *
-     * @return string The error message indicating missing category selections
+     * @return string The error message
      */
     public function getMessage(): string
     {
-        return sprintf(
-            __('You must select at least one option from each of these categories: %s', 'settings-manager'),
-            implode(', ', $this->requiredCategories)
-        );
+        return apply_filters('wp_settings_required_categories_validator_message', $this->customMessage);
     }
 
     /**
@@ -102,6 +120,7 @@ class RequiredCategoriesValidator implements IValidationRule
         return [
             'categoryMap'        => $this->categoryMap,
             'requiredCategories' => $this->requiredCategories,
+            'customMessage'      => $this->customMessage,
         ];
     }
 }

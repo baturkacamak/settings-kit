@@ -2,12 +2,18 @@
 
 namespace WPSettingsKit\Validation\Rules\SelectField;
 
+use WPSettingsKit\Attribute\ValidationRule;
 use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that an option from a specific option group is selected.
  */
-class RequiredGroupValidator implements IValidationRule
+#[ValidationRule(
+    type: ['select', 'radio'],
+    method: 'addRequiredGroupValidation',
+    priority: 50
+)]
+class RequiredGroupValidationRule implements IValidationRule
 {
     /**
      * @var string The option group that must have a selection
@@ -20,15 +26,30 @@ class RequiredGroupValidator implements IValidationRule
     private array $optionGroupMap;
 
     /**
+     * @var string Custom error message
+     */
+    private readonly string $customMessage;
+
+    /**
      * Constructor for RequiredGroupValidator.
      *
      * @param string $requiredGroup The name of the option group that must have a selection
      * @param array<string, string> $optionGroupMap Map of option values to their group names
+     * @param string|null $customMessage Optional custom error message
      */
-    public function __construct(string $requiredGroup, array $optionGroupMap)
+    public function __construct(
+        string  $requiredGroup,
+        array   $optionGroupMap,
+        ?string $customMessage = null
+    )
     {
-        $this->requiredGroup = $requiredGroup;
+        $this->requiredGroup  = $requiredGroup;
         $this->optionGroupMap = $optionGroupMap;
+
+        $this->customMessage = $customMessage ?? sprintf(
+            __('Please select an option from the "%s" group.', 'wp-settings-kit'),
+            $this->requiredGroup
+        );
     }
 
     /**
@@ -64,15 +85,11 @@ class RequiredGroupValidator implements IValidationRule
     /**
      * Gets the error message for when validation fails.
      *
-     * @return string The error message indicating a selection from the required group is needed
+     * @return string The error message
      */
     public function getMessage(): string
     {
-        $message = sprintf(
-            __('Please select an option from the "%s" group.', 'settings-manager'),
-            $this->requiredGroup
-        );
-        return apply_filters('wp_settings_required_group_validator_message', $message, $this->requiredGroup);
+        return apply_filters('wp_settings_required_group_validator_message', $this->customMessage);
     }
 
     /**
@@ -93,8 +110,9 @@ class RequiredGroupValidator implements IValidationRule
     public function getParameters(): array
     {
         return [
-            'requiredGroup' => $this->requiredGroup,
+            'requiredGroup'  => $this->requiredGroup,
             'optionGroupMap' => $this->optionGroupMap,
+            'customMessage'  => $this->customMessage,
         ];
     }
 }
