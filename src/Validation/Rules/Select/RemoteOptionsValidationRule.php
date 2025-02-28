@@ -1,13 +1,19 @@
 <?php
 
-namespace WPSettingsKit\Validation\Rules\SelectField;
+namespace WPSettingsKit\Validation\Rules\Select;
 
+use WPSettingsKit\Attribute\ValidationRule;
 use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that select field value is present in a remote data source.
  */
-class RemoteOptionsValidator implements IValidationRule
+#[ValidationRule(
+    type: ['select', 'radio', 'checkbox'],
+    method: 'addRemoteOptionsValidation',
+    priority: 70
+)]
+class RemoteOptionsValidationRule implements IValidationRule
 {
     /**
      * @var string The API endpoint URL to validate against
@@ -25,17 +31,38 @@ class RemoteOptionsValidator implements IValidationRule
     private array $requestParams;
 
     /**
+     * @var int Cache TTL in seconds
+     */
+    private int $cacheTTL;
+
+    /**
+     * @var string Custom error message
+     */
+    private readonly string $customMessage;
+
+    /**
      * Constructor for RemoteOptionsValidator.
      *
      * @param string $apiEndpoint The API endpoint for validation
      * @param string $responseField The field in API response containing valid values
      * @param array<string, mixed> $requestParams Additional parameters for the API request
+     * @param int $cacheTTL Cache TTL in seconds (default: 3600)
+     * @param string|null $customMessage Optional custom error message
      */
-    public function __construct(string $apiEndpoint, string $responseField, array $requestParams = [])
+    public function __construct(
+        string  $apiEndpoint,
+        string  $responseField,
+        array   $requestParams = [],
+        int     $cacheTTL = 3600,
+        ?string $customMessage = null
+    )
     {
-        $this->apiEndpoint = $apiEndpoint;
+        $this->apiEndpoint   = $apiEndpoint;
         $this->responseField = $responseField;
         $this->requestParams = $requestParams;
+        $this->cacheTTL      = $cacheTTL;
+        $this->customMessage = $customMessage ??
+            __('The selected option is no longer valid.', 'wp-settings-kit');
     }
 
     /**
@@ -47,15 +74,11 @@ class RemoteOptionsValidator implements IValidationRule
     public function validate(mixed $value): bool
     {
         // Cache remote options to avoid multiple API calls
-        static $validOptions = null;
+        $validOptions = $this->fetchValidOptions();
 
+        // If we couldn't fetch options, we can't validate properly
         if ($validOptions === null) {
-            $validOptions = $this->fetchValidOptions();
-
-            // If we couldn't fetch options, we can't validate properly
-            if ($validOptions === null) {
-                return true; // Fail open to avoid blocking users
-            }
+            return true; // Fail open to avoid blocking users
         }
 
         if (is_array($value)) {
@@ -67,7 +90,8 @@ class RemoteOptionsValidator implements IValidationRule
             return true;
         }
 
-        return in_array($value, $validOptions, true);
+        $result = in_array($value, $validOptions, true);
+        return apply_filters('wp_settings_remote_options_validator_result', $result, $value, $validOptions);
     }
 
     /**
@@ -77,9 +101,18 @@ class RemoteOptionsValidator implements IValidationRule
      */
     private function fetchValidOptions(): ?array
     {
+        // Try to get from cache first
+        $cacheKey      = 'remote_options_' . md5($this->apiEndpoint . serialize($this->requestParams));
+        $cachedOptions = get_transient($cacheKey);
+
+        if ($cachedOptions !== false) {
+            return $cachedOptions;
+        }
+
+        // Perform API request
         $args = [
             'timeout' => 15,
-            'body' => $this->requestParams
+            'body'    => $this->requestParams,
         ];
 
         $response = wp_remote_get($this->apiEndpoint, $args);
@@ -95,6 +128,9 @@ class RemoteOptionsValidator implements IValidationRule
             return null;
         }
 
+        // Cache the result
+        set_transient($cacheKey, $data[$this->responseField], $this->cacheTTL);
+
         return $data[$this->responseField];
     }
 
@@ -105,7 +141,7 @@ class RemoteOptionsValidator implements IValidationRule
      */
     public function getMessage(): string
     {
-        return __('The selected option is no longer valid.', 'settings-manager');
+        return apply_filters('wp_settings_remote_options_validator_message', $this->customMessage);
     }
 
     /**
@@ -126,8 +162,11 @@ class RemoteOptionsValidator implements IValidationRule
     public function getParameters(): array
     {
         return [
-            'apiEndpoint' => $this->apiEndpoint,
-            'responseField' => $this->responseField
+            'apiEndpoint'   => $this->apiEndpoint,
+            'responseField' => $this->responseField,
+            'requestParams' => $this->requestParams,
+            'cacheTTL'      => $this->cacheTTL,
+            'customMessage' => $this->customMessage,
         ];
     }
 }

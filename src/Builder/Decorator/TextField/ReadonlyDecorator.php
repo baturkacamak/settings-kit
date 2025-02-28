@@ -2,37 +2,46 @@
 
 namespace WPSettingsKit\Builder\Decorator\TextField;
 
-use WPSettingsKit\Builder\Interface\IFieldBuilderDecorator;
+use WPSettingsKit\Attribute\FieldDecorator;
+use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
 
 /**
- * Decorator for setting readonly attribute on text fields
+ * Decorator for setting readonly state on text fields.
  */
-class ReadonlyDecorator implements IFieldBuilderDecorator
+#[FieldDecorator(
+    type: ['text', 'textarea'],
+    method: 'setReadonly',
+    priority: 50
+)]
+class ReadonlyDecorator extends AbstractFieldBuilderDecorator
 {
     /**
-     * @var bool Whether field is readonly
+     * @var bool Whether the field is readonly
      */
     private bool $readonly;
 
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param bool $readonly Whether to make field readonly
+     * @param bool $readonly Whether to make the field readonly
+     * @param int|null $priority Optional priority override
      */
-    public function __construct(bool $readonly = true)
+    public function __construct(bool $readonly = true, ?int $priority = null)
     {
+        parent::__construct($priority);
         $this->readonly = $readonly;
     }
 
     /**
-     * Apply readonly attribute to configuration
-     *
-     * @param array<string, mixed> $config Current configuration
-     * @return array<string, mixed> Updated configuration
+     * {@inheritdoc}
      */
-    public function applyToConfig(array $config): array
+    protected function getConfigModifications(): array
     {
-        $config['readonly'] = $this->readonly;
-        return $config;
+        return [
+            'readonly' => $this->readonly,
+            'attributes' => [
+                'readonly' => $this->readonly ? 'readonly' : null,
+            ]
+        ];
     }
 }

@@ -3,27 +3,45 @@
 namespace WPSettingsKit\Builder;
 
 use WPSettingsKit\Builder\Decorator\CheckboxField\CheckedValueDecorator;
-use WPSettingsKit\Builder\Decorator\CheckboxField\LabelPositionDecorator;
-use WPSettingsKit\Builder\Decorator\CheckboxField\SwitchStyleDecorator;
 use WPSettingsKit\Builder\Decorator\CheckboxField\UncheckedValueDecorator;
-use WPSettingsKit\Builder\Decorator\CssClassDecorator;
-use WPSettingsKit\Builder\Decorator\DefaultValueDecorator;
-use WPSettingsKit\Builder\Decorator\DescriptionDecorator;
-use WPSettingsKit\Builder\Decorator\DisabledDecorator;
-use WPSettingsKit\Builder\Decorator\RequiredDecorator;
 use WPSettingsKit\Field\Base\Interface\IField;
 use WPSettingsKit\Field\Basic\CheckboxField;
 
 /**
- * Builder for checkbox fields using decorator pattern
+ * Builder for checkbox fields with automatic decorator support.
+ *
+ * Provides a fluent interface for configuring and building checkbox field objects.
  */
 class CheckboxFieldBuilder extends BaseFieldBuilder
 {
     /**
-     * Set checked value
+     * Constructor.
+     *
+     * @param string $key Field unique key
+     * @param string $label Field display label
+     */
+    public function __construct(string $key, string $label)
+    {
+        parent::__construct($key, $label, 'checkbox');
+    }
+
+    /**
+     * Creates a boolean checkbox (true/false).
+     *
+     * @return self For method chaining
+     */
+    public function asBoolean(): self
+    {
+        $this->setCheckedValue(true);
+        $this->setUncheckedValue(false);
+        return $this;
+    }
+
+    /**
+     * Set checked value.
      *
      * @param mixed $value Value when checkbox is checked
-     * @return self
+     * @return self For method chaining
      */
     public function setCheckedValue(mixed $value): self
     {
@@ -31,10 +49,10 @@ class CheckboxFieldBuilder extends BaseFieldBuilder
     }
 
     /**
-     * Set unchecked value
+     * Set unchecked value.
      *
      * @param mixed $value Value when checkbox is unchecked
-     * @return self
+     * @return self For method chaining
      */
     public function setUncheckedValue(mixed $value): self
     {
@@ -42,89 +60,59 @@ class CheckboxFieldBuilder extends BaseFieldBuilder
     }
 
     /**
-     * Set checkbox as switch style
+     * Creates a yes/no checkbox.
      *
-     * @param bool $switchStyle Whether to style as switch
-     * @return self
+     * @return self For method chaining
      */
-    public function setSwitchStyle(bool $switchStyle = true): self
+    public function asYesNo(): self
     {
-        return $this->addDecorator(new SwitchStyleDecorator($switchStyle));
+        $this->setCheckedValue('yes');
+        $this->setUncheckedValue('no');
+        return $this;
     }
 
     /**
-     * Set label position
+     * Creates an enabled/disabled checkbox.
      *
-     * @param string $position Position ('before' or 'after')
-     * @return self
+     * @return self For method chaining
      */
-    public function setLabelPosition(string $position): self
+    public function asEnabledDisabled(): self
     {
-        return $this->addDecorator(new LabelPositionDecorator($position));
+        $this->setCheckedValue('enabled');
+        $this->setUncheckedValue('disabled');
+        return $this;
     }
 
     /**
-     * Set field as disabled
+     * Creates a numeric 1/0 checkbox.
      *
-     * @param bool $disabled Whether field is disabled
-     * @return self
+     * @return self For method chaining
      */
-    public function setDisabled(bool $disabled = true): self
+    public function asNumeric(): self
     {
-        return $this->addDecorator(new DisabledDecorator($disabled));
+        $this->setCheckedValue(1);
+        $this->setUncheckedValue(0);
+        return $this;
     }
 
     /**
-     * Set field as required
-     *
-     * @param bool $required Whether field is required
-     * @return self
-     */
-    public function setRequired(bool $required = true): self
-    {
-        return $this->addDecorator(new RequiredDecorator($required));
-    }
-
-    /**
-     * Set field description
-     *
-     * @param string $description Field description text
-     * @return self
-     */
-    public function setDescription(string $description): self
-    {
-        return $this->addDecorator(new DescriptionDecorator($description));
-    }
-
-    /**
-     * Set default value
-     *
-     * @param mixed $value Default field value
-     * @return self
-     */
-    public function setDefaultValue(mixed $value): self
-    {
-        return $this->addDecorator(new DefaultValueDecorator($value));
-    }
-
-    /**
-     * Set CSS classes
-     *
-     * @param string $cssClass CSS classes to add
-     * @return self
-     */
-    public function setCssClass(string $cssClass): self
-    {
-        return $this->addDecorator(new CssClassDecorator($cssClass));
-    }
-
-    /**
-     * Build and return a CheckboxField
+     * Builds and returns a CheckboxField.
      *
      * @return IField The configured checkbox field
      */
     public function build(): IField
     {
+        $config = $this->getDecoratedConfig();
+
+        // Set default values if not already set
+        if (!isset($config['checked_value'])) {
+            $this->setCheckedValue(true);
+        }
+
+        if (!isset($config['unchecked_value'])) {
+            $this->setUncheckedValue(false);
+        }
+
         $config = $this->getDecoratedConfig();
         return new CheckboxField($config);
     }

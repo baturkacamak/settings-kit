@@ -6,30 +6,30 @@ use WPSettingsKit\Attribute\FieldDecorator;
 use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
 
 /**
- * Decorator for setting the unchecked value of a checkbox field.
+ * Decorator for setting an inline label for checkbox fields.
  */
 #[FieldDecorator(
     type: 'checkbox',
-    method: 'setUncheckedValue',
-    priority: 15
+    method: 'setInlineLabel',
+    priority: 30
 )]
-class UncheckedValueDecorator extends AbstractFieldBuilderDecorator
+class InlineLabelDecorator extends AbstractFieldBuilderDecorator
 {
     /**
-     * @var mixed Value when checkbox is unchecked
+     * @var string Inline label text
      */
-    private mixed $uncheckedValue;
+    private string $inlineLabel;
 
     /**
      * Constructor.
      *
-     * @param mixed $uncheckedValue Value when checkbox is unchecked
+     * @param string $inlineLabel Inline label text
      * @param int|null $priority Optional priority override
      */
-    public function __construct(mixed $uncheckedValue, ?int $priority = null)
+    public function __construct(string $inlineLabel, ?int $priority = null)
     {
         parent::__construct($priority);
-        $this->uncheckedValue = $uncheckedValue;
+        $this->inlineLabel = $inlineLabel;
     }
 
     /**
@@ -38,7 +38,7 @@ class UncheckedValueDecorator extends AbstractFieldBuilderDecorator
     protected function getConfigModifications(): array
     {
         return [
-            'unchecked_value' => $this->uncheckedValue,
+            'inline_label' => $this->inlineLabel,
         ];
     }
 }

@@ -2,12 +2,18 @@
 
 namespace WPSettingsKit\Builder\Decorator\SelectField;
 
-use WPSettingsKit\Builder\Interface\IFieldBuilderDecorator;
+use WPSettingsKit\Attribute\FieldDecorator;
+use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
 
 /**
- * Decorator for adding placeholder option to select fields
+ * Decorator for adding a placeholder option to select fields.
  */
-class SelectPlaceholderDecorator implements IFieldBuilderDecorator
+#[FieldDecorator(
+    type: 'select',
+    method: 'setPlaceholder',
+    priority: 5
+)]
+class SelectPlaceholderDecorator extends AbstractFieldBuilderDecorator
 {
     /**
      * @var string Placeholder text
@@ -15,32 +21,74 @@ class SelectPlaceholderDecorator implements IFieldBuilderDecorator
     private string $placeholder;
 
     /**
-     * @var bool Whether placeholder option is disabled
+     * @var bool Whether the placeholder option is disabled
      */
     private bool $disabled;
 
     /**
-     * Constructor
+     * @var string|null Value for the placeholder option (default: '')
+     */
+    private ?string $value;
+
+    /**
+     * Constructor.
      *
      * @param string $placeholder Placeholder text
-     * @param bool $disabled Whether placeholder option is disabled
+     * @param bool $disabled Whether the placeholder option is disabled
+     * @param string|null $value Value for the placeholder option (default: '')
+     * @param int|null $priority Optional priority override
      */
-    public function __construct(string $placeholder, bool $disabled = true)
-    {
+    public function __construct(
+        string $placeholder,
+        bool $disabled = true,
+        ?string $value = '',
+        ?int $priority = null
+    ) {
+        parent::__construct($priority);
         $this->placeholder = $placeholder;
         $this->disabled = $disabled;
+        $this->value = $value;
     }
 
     /**
-     * Apply placeholder option to configuration
-     *
-     * @param array<string, mixed> $config Current configuration
-     * @return array<string, mixed> Updated configuration
+     * {@inheritdoc}
      */
     public function applyToConfig(array $config): array
     {
         $config['placeholder'] = $this->placeholder;
         $config['placeholder_disabled'] = $this->disabled;
+
+        // Initialize options array if it doesn't exist
+        if (!isset($config['options'])) {
+            $config['options'] = [];
+        }
+
+        // Add the placeholder as the first option
+        $options = [
+            $this->value => $this->placeholder
+        ];
+
+        // Merge with existing options, keeping placeholder first
+        $config['options'] = $options + $config['options'];
+
+        // Add placeholder attributes if needed
+        if ($this->disabled) {
+            $config['placeholder_attributes'] = [
+                'disabled' => 'disabled',
+                'selected' => !isset($config['value']) || $config['value'] === $this->value
+            ];
+        }
+
         return $config;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function getConfigModifications(): array
+    {
+        // This is not used in the SelectPlaceholderDecorator since it requires
+        // custom handling in applyToConfig
+        return [];
     }
 }

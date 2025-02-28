@@ -2,37 +2,46 @@
 
 namespace WPSettingsKit\Builder\Decorator\TextField;
 
-use WPSettingsKit\Builder\Interface\IFieldBuilderDecorator;
+use WPSettingsKit\Attribute\FieldDecorator;
+use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
 
 /**
- * Decorator for setting max length on text fields
+ * Decorator for setting maximum length on text fields.
  */
-class MaxLengthDecorator implements IFieldBuilderDecorator
+#[FieldDecorator(
+    type: 'text',
+    method: 'setMaxLength',
+    priority: 10
+)]
+class MaxLengthDecorator extends AbstractFieldBuilderDecorator
 {
     /**
-     * @var int Maximum length
+     * @var int Maximum character length
      */
     private int $maxLength;
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param int $maxLength Maximum character length
+     * @param int|null $priority Optional priority override
      */
-    public function __construct(int $maxLength)
+    public function __construct(int $maxLength, ?int $priority = null)
     {
+        parent::__construct($priority);
         $this->maxLength = $maxLength;
     }
 
     /**
-     * Apply max length to configuration
-     *
-     * @param array<string, mixed> $config Current configuration
-     * @return array<string, mixed> Updated configuration
+     * {@inheritdoc}
      */
-    public function applyToConfig(array $config): array
+    protected function getConfigModifications(): array
     {
-        $config['max_length'] = $this->maxLength;
-        return $config;
+        return [
+            'max_length' => $this->maxLength,
+            'attributes' => [
+                'maxlength' => $this->maxLength
+            ]
+        ];
     }
 }

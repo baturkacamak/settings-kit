@@ -2,12 +2,18 @@
 
 namespace WPSettingsKit\Builder\Decorator\SelectField;
 
-use WPSettingsKit\Builder\Interface\IFieldBuilderDecorator;
+use WPSettingsKit\Attribute\FieldDecorator;
+use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
 
 /**
- * Decorator for adding a single option to select fields
+ * Decorator for adding a single option to select fields.
  */
-class SingleOptionDecorator implements IFieldBuilderDecorator
+#[FieldDecorator(
+    type: 'select',
+    method: 'addOption',
+    priority: 11
+)]
+class SingleOptionDecorator extends AbstractFieldBuilderDecorator
 {
     /**
      * @var string Option key
@@ -20,30 +26,42 @@ class SingleOptionDecorator implements IFieldBuilderDecorator
     private string $label;
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param string $key Option key/value
      * @param string $label Option display label
+     * @param int|null $priority Optional priority override
      */
-    public function __construct(string $key, string $label)
+    public function __construct(string $key, string $label, ?int $priority = null)
     {
+        parent::__construct($priority);
         $this->key = $key;
         $this->label = $label;
     }
 
     /**
-     * Apply single option to configuration
-     *
-     * @param array<string, mixed> $config Current configuration
-     * @return array<string, mixed> Updated configuration
+     * {@inheritdoc}
      */
     public function applyToConfig(array $config): array
     {
+        // Initialize options array if it doesn't exist
         if (!isset($config['options'])) {
             $config['options'] = [];
         }
 
+        // Add the single option
         $config['options'][$this->key] = $this->label;
+
         return $config;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function getConfigModifications(): array
+    {
+        // This is not used in the SingleOptionDecorator since it requires
+        // custom handling in applyToConfig
+        return [];
     }
 }

@@ -1,13 +1,19 @@
 <?php
 
-namespace WPSettingsKit\Validation\Rules\Numeric;
+namespace WPSettingsKit\Validation\Rules\Common;
 
+use WPSettingsKit\Attribute\ValidationRule;
 use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that a string contains only alphabetic characters.
  */
-class AlphaValidator implements IValidationRule
+#[ValidationRule(
+    type: ['text', 'password'],
+    method: 'addAlphaValidation',
+    priority: 25
+)]
+class AlphaValidationRule implements IValidationRule
 {
     /**
      * @var bool Whether to allow spaces.
@@ -20,14 +26,28 @@ class AlphaValidator implements IValidationRule
     private readonly string $pattern;
 
     /**
+     * @var string Custom error message
+     */
+    private readonly string $customMessage;
+
+    /**
      * Constructor for AlphaValidator.
      *
      * @param bool $allowSpaces Whether to allow spaces in the string.
+     * @param string|null $customMessage Optional custom error message.
      */
-    public function __construct(bool $allowSpaces = false)
+    public function __construct(bool $allowSpaces = false, ?string $customMessage = null)
     {
         $this->allowSpaces = $allowSpaces;
-        $this->pattern = $allowSpaces ? '/^[a-zA-Z\s]+$/' : '/^[a-zA-Z]+$/';
+        $this->pattern     = $allowSpaces ? '/^[a-zA-Z\s]+$/u' : '/^[a-zA-Z]+$/u';
+
+        if ($customMessage === null) {
+            $this->customMessage = $allowSpaces
+                ? __('This field may only contain letters and spaces.', 'wp-settings-kit')
+                : __('This field may only contain letters.', 'wp-settings-kit');
+        } else {
+            $this->customMessage = $customMessage;
+        }
     }
 
     /**
@@ -53,9 +73,7 @@ class AlphaValidator implements IValidationRule
      */
     public function getMessage(): string
     {
-        return $this->allowSpaces
-            ? __('This field may only contain letters and spaces.', 'settings-manager')
-            : __('This field may only contain letters.', 'settings-manager');
+        return apply_filters('wp_settings_alpha_validator_message', $this->customMessage, $this->allowSpaces);
     }
 
     /**
@@ -76,7 +94,9 @@ class AlphaValidator implements IValidationRule
     public function getParameters(): array
     {
         return [
-            'allowSpaces' => $this->allowSpaces
+            'allowSpaces'   => $this->allowSpaces,
+            'pattern'       => $this->pattern,
+            'customMessage' => $this->customMessage,
         ];
     }
 }

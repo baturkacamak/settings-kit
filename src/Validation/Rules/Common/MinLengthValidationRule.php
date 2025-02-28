@@ -2,12 +2,18 @@
 
 namespace WPSettingsKit\Validation\Rules\Common;
 
+use WPSettingsKit\Attribute\ValidationRule;
 use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that a string value meets or exceeds a specified minimum length.
  */
-class MinLengthValidator implements IValidationRule
+#[ValidationRule(
+    type: ['text', 'textarea', 'password'],
+    method: 'addMinLengthValidation',
+    priority: 20
+)]
+class MinLengthValidationRule implements IValidationRule
 {
     /**
      * @var int The minimum required length for the value.
@@ -15,13 +21,23 @@ class MinLengthValidator implements IValidationRule
     private readonly int $minLength;
 
     /**
+     * @var string Custom error message
+     */
+    private readonly string $customMessage;
+
+    /**
      * Constructor for MinLengthValidator.
      *
      * @param int $minLength The minimum length required for the validated string.
+     * @param string|null $customMessage Optional custom error message.
      */
-    public function __construct(int $minLength)
+    public function __construct(int $minLength, ?string $customMessage = null)
     {
-        $this->minLength = $minLength;
+        $this->minLength     = $minLength;
+        $this->customMessage = $customMessage ?? sprintf(
+            __('This field must be at least %d characters long.', 'wp-settings-kit'),
+            $minLength
+        );
     }
 
     /**
@@ -35,7 +51,7 @@ class MinLengthValidator implements IValidationRule
         if (!is_string($value)) {
             return false;
         }
-        $result = strlen($value) >= $this->minLength;
+        $result = mb_strlen($value, 'UTF-8') >= $this->minLength;
         return apply_filters('wp_settings_min_length_validator_result', $result, $value, $this->minLength);
     }
 
@@ -46,10 +62,7 @@ class MinLengthValidator implements IValidationRule
      */
     public function getMessage(): string
     {
-        return sprintf(
-            __('This field must be at least %d characters long.', 'settings-manager'),
-            $this->minLength
-        );
+        return apply_filters('wp_settings_min_length_validator_message', $this->customMessage, $this->minLength);
     }
 
     /**
@@ -65,10 +78,13 @@ class MinLengthValidator implements IValidationRule
     /**
      * Gets the parameters used by this validator.
      *
-     * @return array<string, mixed> An array containing the minLength parameter.
+     * @return array<string, mixed> An array containing the validation parameters.
      */
     public function getParameters(): array
     {
-        return ['minLength' => $this->minLength];
+        return [
+            'minLength'     => $this->minLength,
+            'customMessage' => $this->customMessage,
+        ];
     }
 }

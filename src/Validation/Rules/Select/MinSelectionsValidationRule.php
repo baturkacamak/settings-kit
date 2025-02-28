@@ -1,13 +1,19 @@
 <?php
 
-namespace WPSettingsKit\Validation\Rules\SelectField;
+namespace WPSettingsKit\Validation\Rules\Select;
 
+use WPSettingsKit\Attribute\ValidationRule;
 use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that a minimum number of options are selected for multi-select fields.
  */
-class MinSelectionsValidator implements IValidationRule
+#[ValidationRule(
+    type: ['select', 'checkbox'],
+    method: 'addMinSelectionsValidation',
+    priority: 35
+)]
+class MinSelectionsValidationRule implements IValidationRule
 {
     /**
      * @var int The minimum number of selections required
@@ -15,13 +21,23 @@ class MinSelectionsValidator implements IValidationRule
     private int $minSelections;
 
     /**
+     * @var string Custom error message
+     */
+    private readonly string $customMessage;
+
+    /**
      * Constructor for MinSelectionsValidator.
      *
      * @param int $minSelections The minimum number of selections required
+     * @param string|null $customMessage Optional custom error message
      */
-    public function __construct(int $minSelections)
+    public function __construct(int $minSelections, ?string $customMessage = null)
     {
         $this->minSelections = max(1, $minSelections); // Ensure at least 1
+        $this->customMessage = $customMessage ?? sprintf(
+            __('Please select at least %d option(s).', 'wp-settings-kit'),
+            $minSelections
+        );
     }
 
     /**
@@ -49,11 +65,7 @@ class MinSelectionsValidator implements IValidationRule
      */
     public function getMessage(): string
     {
-        $message = sprintf(
-            __('Please select at least %d option(s).', 'settings-manager'),
-            $this->minSelections
-        );
-        return apply_filters('wp_settings_min_selections_validator_message', $message, $this->minSelections);
+        return apply_filters('wp_settings_min_selections_validator_message', $this->customMessage, $this->minSelections);
     }
 
     /**
@@ -73,6 +85,9 @@ class MinSelectionsValidator implements IValidationRule
      */
     public function getParameters(): array
     {
-        return ['minSelections' => $this->minSelections];
+        return [
+            'minSelections' => $this->minSelections,
+            'customMessage' => $this->customMessage,
+        ];
     }
 }

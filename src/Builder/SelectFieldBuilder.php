@@ -2,30 +2,37 @@
 
 namespace WPSettingsKit\Builder;
 
-use WPSettingsKit\Builder\Decorator\CssClassDecorator;
-use WPSettingsKit\Builder\Decorator\DefaultValueDecorator;
-use WPSettingsKit\Builder\Decorator\DescriptionDecorator;
-use WPSettingsKit\Builder\Decorator\DisabledDecorator;
-use WPSettingsKit\Builder\Decorator\RequiredDecorator;
-use WPSettingsKit\Builder\Decorator\SelectField\MultipleDecorator;
-use WPSettingsKit\Builder\Decorator\SelectField\OptionGroupsDecorator;
 use WPSettingsKit\Builder\Decorator\SelectField\OptionsDecorator;
-use WPSettingsKit\Builder\Decorator\SelectField\SelectPlaceholderDecorator;
-use WPSettingsKit\Builder\Decorator\SelectField\SelectSizeDecorator;
 use WPSettingsKit\Builder\Decorator\SelectField\SingleOptionDecorator;
 use WPSettingsKit\Field\Base\Interface\IField;
 use WPSettingsKit\Field\Basic\SelectField;
+use WPSettingsKit\Validation\Rules\SelectField\OptionExistsValidator;
+use WPSettingsKit\Validation\Rules\SelectField\MaxSelectionsValidator;
+use WPSettingsKit\Validation\Rules\SelectField\MinSelectionsValidator;
 
 /**
- * Builder for select fields using decorator pattern
+ * Builder for select fields with automatic decorator support.
+ *
+ * Provides a fluent interface for configuring and building select field objects.
  */
 class SelectFieldBuilder extends BaseFieldBuilder
 {
     /**
-     * Set options for the select field
+     * Constructor.
+     *
+     * @param string $key Field unique key
+     * @param string $label Field display label
+     */
+    public function __construct(string $key, string $label)
+    {
+        parent::__construct($key, $label, 'select');
+    }
+
+    /**
+     * Set options for the select field.
      *
      * @param array<string, mixed> $options Key-value pairs for options
-     * @return self
+     * @return self For method chaining
      */
     public function setOptions(array $options): self
     {
@@ -33,11 +40,11 @@ class SelectFieldBuilder extends BaseFieldBuilder
     }
 
     /**
-     * Add a single option to the select field
+     * Add a single option to the select field.
      *
      * @param string $key Option key/value
      * @param string $label Option display label
-     * @return self
+     * @return self For method chaining
      */
     public function addOption(string $key, string $label): self
     {
@@ -45,107 +52,71 @@ class SelectFieldBuilder extends BaseFieldBuilder
     }
 
     /**
-     * Enable multiple selections
+     * Adds validation that ensures selected options exist in the available options.
      *
-     * @param bool $multiple Whether to allow multiple selections
-     * @return self
+     * @param string|null $customMessage Optional custom error message
+     * @return self For method chaining
      */
-    public function setMultiple(bool $multiple = true): self
+    public function addOptionExistsRule(?string $customMessage = null): self
     {
-        return $this->addDecorator(new MultipleDecorator($multiple));
+        $options = $this->getOptionsFromConfig();
+        return $this->addValidationRule(
+            new OptionExistsValidator($options, $customMessage)
+        );
     }
 
     /**
-     * Set number of visible items
+     * Adds validation that enforces a maximum number of selections.
      *
-     * @param int $size Number of visible items
-     * @return self
+     * @param int $maxSelections Maximum number of selections allowed
+     * @param string|null $customMessage Optional custom error message
+     * @return self For method chaining
      */
-    public function setSize(int $size): self
+    public function addMaxSelectionsRule(int $maxSelections, ?string $customMessage = null): self
     {
-        return $this->addDecorator(new SelectSizeDecorator($size));
+        return $this->addValidationRule(
+            new MaxSelectionsValidator($maxSelections, $customMessage)
+        );
     }
 
     /**
-     * Add a placeholder option
+     * Adds validation that enforces a minimum number of selections.
      *
-     * @param string $placeholder Placeholder text
-     * @param bool $disabled Whether placeholder option is disabled
-     * @return self
+     * @param int $minSelections Minimum number of selections required
+     * @param string|null $customMessage Optional custom error message
+     * @return self For method chaining
      */
-    public function setPlaceholder(string $placeholder, bool $disabled = true): self
+    public function addMinSelectionsRule(int $minSelections, ?string $customMessage = null): self
     {
-        return $this->addDecorator(new SelectPlaceholderDecorator($placeholder, $disabled));
+        return $this->addValidationRule(
+            new MinSelectionsValidator($minSelections, $customMessage)
+        );
     }
 
     /**
-     * Add option groups to select field
+     * Gets available options from config.
      *
-     * @param array<string, array<string, string>> $optionGroups Group label => [key => value]
-     * @return self
+     * @return array<string, string> Option key-value pairs
      */
-    public function setOptionGroups(array $optionGroups): self
+    protected function getOptionsFromConfig(): array
     {
-        return $this->addDecorator(new OptionGroupsDecorator($optionGroups));
+        // Extract existing options from config
+        if (isset($this->config['options']) && is_array($this->config['options'])) {
+            return $this->config['options'];
+        }
+
+        // Look through decorators for options
+        foreach ($this->decorators as $decorator) {
+            if ($decorator instanceof OptionsDecorator) {
+                return $decorator->getOptions();
+            }
+        }
+
+        return [];
     }
 
     /**
-     * Set field as disabled
-     *
-     * @param bool $disabled Whether field is disabled
-     * @return self
-     */
-    public function setDisabled(bool $disabled = true): self
-    {
-        return $this->addDecorator(new DisabledDecorator($disabled));
-    }
-
-    /**
-     * Set field as required
-     *
-     * @param bool $required Whether field is required
-     * @return self
-     */
-    public function setRequired(bool $required = true): self
-    {
-        return $this->addDecorator(new RequiredDecorator($required));
-    }
-
-    /**
-     * Set field description
-     *
-     * @param string $description Field description text
-     * @return self
-     */
-    public function setDescription(string $description): self
-    {
-        return $this->addDecorator(new DescriptionDecorator($description));
-    }
-
-    /**
-     * Set default value
-     *
-     * @param string|array<string> $value Default field value (string or array for multiple)
-     * @return self
-     */
-    public function setDefaultValue(string|array $value): self
-    {
-        return $this->addDecorator(new DefaultValueDecorator($value));
-    }
-
-    /**
-     * Set CSS classes
-     *
-     * @param string $cssClass CSS classes to add
-     * @return self
-     */
-    public function setCssClass(string $cssClass): self
-    {
-        return $this->addDecorator(new CssClassDecorator($cssClass));
-    }
-
-    /**
-     * Build and return a SelectField
+     * Builds and returns a SelectField.
      *
      * @return IField The configured select field
      */
@@ -153,11 +124,37 @@ class SelectFieldBuilder extends BaseFieldBuilder
     {
         $config = $this->getDecoratedConfig();
 
-        // Ensure options array exists
-        if (!isset($config['options'])) {
-            $config['options'] = [];
+        // Add automatic option exists validation if not already added
+        if ($this->shouldAddOptionExistsValidation($config)) {
+            $this->addOptionExistsRule();
+            $config = $this->getDecoratedConfig();
         }
 
         return new SelectField($config);
+    }
+
+    /**
+     * Determines if option exists validation should be added automatically.
+     *
+     * @param array<string, mixed> $config Field configuration
+     * @return bool Whether to add option exists validation
+     */
+    protected function shouldAddOptionExistsValidation(array $config): bool
+    {
+        // Skip if no options defined
+        if (empty($config['options'])) {
+            return false;
+        }
+
+        // Skip if already has an OptionExistsValidator
+        if (isset($config['validation_rules']) && is_array($config['validation_rules'])) {
+            foreach ($config['validation_rules'] as $rule) {
+                if ($rule instanceof OptionExistsValidator) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }

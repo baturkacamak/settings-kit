@@ -6,30 +6,30 @@ use WPSettingsKit\Attribute\FieldDecorator;
 use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
 
 /**
- * Decorator for adding placeholder text to text fields.
+ * Decorator for setting autocomplete values on text fields.
  */
 #[FieldDecorator(
     type: 'text',
-    method: 'setPlaceholder',
-    priority: 20
+    method: 'setAutocomplete',
+    priority: 30
 )]
-class PlaceholderDecorator extends AbstractFieldBuilderDecorator
+class AutocompleteDecorator extends AbstractFieldBuilderDecorator
 {
     /**
-     * @var string Placeholder text
+     * @var string Autocomplete value (e.g., 'name', 'email', 'off')
      */
-    private string $placeholder;
+    private string $autocomplete;
 
     /**
      * Constructor.
      *
-     * @param string $placeholder Placeholder text
+     * @param string $autocomplete Autocomplete value
      * @param int|null $priority Optional priority override
      */
-    public function __construct(string $placeholder, ?int $priority = null)
+    public function __construct(string $autocomplete, ?int $priority = null)
     {
         parent::__construct($priority);
-        $this->placeholder = $placeholder;
+        $this->autocomplete = $autocomplete;
     }
 
     /**
@@ -38,9 +38,9 @@ class PlaceholderDecorator extends AbstractFieldBuilderDecorator
     protected function getConfigModifications(): array
     {
         return [
-            'placeholder' => $this->placeholder,
+            'autocomplete' => $this->autocomplete,
             'attributes' => [
-                'placeholder' => $this->placeholder
+                'autocomplete' => $this->autocomplete
             ]
         ];
     }

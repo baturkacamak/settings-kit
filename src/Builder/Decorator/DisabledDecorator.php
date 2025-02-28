@@ -1,13 +1,21 @@
 <?php
 
-namespace WPSettingsKit\Builder\Decorator;
+namespace WPSettingsKit\Builder\Decorator\Common;
 
-use WPSettingsKit\Builder\Interface\IFieldBuilderDecorator;
+use WPSettingsKit\Attribute\FieldDecorator;
+use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
 
 /**
- * Decorator for adding disabled state to fields
+ * Decorator for setting disabled state on fields.
+ *
+ * This decorator can be applied to all field types.
  */
-class DisabledDecorator implements IFieldBuilderDecorator
+#[FieldDecorator(
+    type: 'all',
+    method: 'setDisabled',
+    priority: 50
+)]
+class DisabledDecorator extends AbstractFieldBuilderDecorator
 {
     /**
      * @var bool Whether the field is disabled
@@ -15,24 +23,27 @@ class DisabledDecorator implements IFieldBuilderDecorator
     private bool $disabled;
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param bool $disabled Whether to disable the field
+     * @param int|null $priority Optional priority override
      */
-    public function __construct(bool $disabled = true)
+    public function __construct(bool $disabled = true, ?int $priority = null)
     {
+        parent::__construct($priority);
         $this->disabled = $disabled;
     }
 
     /**
-     * Apply disabled state to configuration
-     *
-     * @param array<string, mixed> $config Current configuration
-     * @return array<string, mixed> Updated configuration
+     * {@inheritdoc}
      */
-    public function applyToConfig(array $config): array
+    protected function getConfigModifications(): array
     {
-        $config['disabled'] = $this->disabled;
-        return $config;
+        return [
+            'disabled' => $this->disabled,
+            'attributes' => [
+                'disabled' => $this->disabled ? 'disabled' : null,
+            ]
+        ];
     }
 }

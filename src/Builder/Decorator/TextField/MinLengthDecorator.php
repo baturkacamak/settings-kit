@@ -2,37 +2,46 @@
 
 namespace WPSettingsKit\Builder\Decorator\TextField;
 
-use WPSettingsKit\Builder\Interface\IFieldBuilderDecorator;
+use WPSettingsKit\Attribute\FieldDecorator;
+use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
 
 /**
- * Decorator for setting min length on text fields
+ * Decorator for setting minimum length on text fields.
  */
-class MinLengthDecorator implements IFieldBuilderDecorator
+#[FieldDecorator(
+    type: 'text',
+    method: 'setMinLength',
+    priority: 11
+)]
+class MinLengthDecorator extends AbstractFieldBuilderDecorator
 {
     /**
-     * @var int Minimum length
+     * @var int Minimum character length
      */
     private int $minLength;
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param int $minLength Minimum character length
+     * @param int|null $priority Optional priority override
      */
-    public function __construct(int $minLength)
+    public function __construct(int $minLength, ?int $priority = null)
     {
+        parent::__construct($priority);
         $this->minLength = $minLength;
     }
 
     /**
-     * Apply min length to configuration
-     *
-     * @param array<string, mixed> $config Current configuration
-     * @return array<string, mixed> Updated configuration
+     * {@inheritdoc}
      */
-    public function applyToConfig(array $config): array
+    protected function getConfigModifications(): array
     {
-        $config['min_length'] = $this->minLength;
-        return $config;
+        return [
+            'min_length' => $this->minLength,
+            'attributes' => [
+                'minlength' => $this->minLength
+            ]
+        ];
     }
 }

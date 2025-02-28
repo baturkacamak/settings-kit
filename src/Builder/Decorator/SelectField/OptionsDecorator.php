@@ -2,12 +2,18 @@
 
 namespace WPSettingsKit\Builder\Decorator\SelectField;
 
-use WPSettingsKit\Builder\Interface\IFieldBuilderDecorator;
+use WPSettingsKit\Attribute\FieldDecorator;
+use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
 
 /**
- * Decorator for adding options to select fields
+ * Decorator for adding options to select fields.
  */
-class OptionsDecorator implements IFieldBuilderDecorator
+#[FieldDecorator(
+    type: 'select',
+    method: 'setOptions',
+    priority: 10
+)]
+class OptionsDecorator extends AbstractFieldBuilderDecorator
 {
     /**
      * @var array<string, mixed> Select options (key => label)
@@ -15,27 +21,46 @@ class OptionsDecorator implements IFieldBuilderDecorator
     private array $options;
 
     /**
-     * Constructor
+     * @var bool Whether to replace existing options
+     */
+    private bool $replace;
+
+    /**
+     * Constructor.
      *
      * @param array<string, mixed> $options Select options
+     * @param bool $replace Whether to replace existing options
+     * @param int|null $priority Optional priority override
      */
-    public function __construct(array $options)
+    public function __construct(array $options, bool $replace = true, ?int $priority = null)
     {
+        parent::__construct($priority);
         $this->options = $options;
+        $this->replace = $replace;
     }
 
     /**
-     * Apply options to configuration
-     *
-     * @param array<string, mixed> $config Current configuration
-     * @return array<string, mixed> Updated configuration
+     * {@inheritdoc}
      */
     public function applyToConfig(array $config): array
     {
-        // Merge with any existing options
-        $existingOptions   = $config['options'] ?? [];
-        $config['options'] = array_merge($existingOptions, $this->options);
+        // Merge with existing options if not replacing
+        if (!$this->replace && isset($config['options']) && is_array($config['options'])) {
+            $config['options'] = array_merge($config['options'], $this->options);
+        } else {
+            $config['options'] = $this->options;
+        }
 
         return $config;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function getConfigModifications(): array
+    {
+        // This is not used in the OptionsDecorator since it requires
+        // custom handling in applyToConfig
+        return [];
     }
 }

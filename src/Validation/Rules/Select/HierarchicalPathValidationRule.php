@@ -1,13 +1,19 @@
 <?php
 
-namespace WPSettingsKit\Validation\Rules\SelectField;
+namespace WPSettingsKit\Validation\Rules\Select;
 
+use WPSettingsKit\Attribute\ValidationRule;
 use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that selections form a valid hierarchical path.
  */
-class HierarchicalPathValidator implements IValidationRule
+#[ValidationRule(
+    type: ['select'],
+    method: 'addHierarchicalPathValidation',
+    priority: 65
+)]
+class HierarchicalPathValidationRule implements IValidationRule
 {
     /**
      * @var array<string, array<string>> Tree structure representing valid parent-child relationships
@@ -15,13 +21,21 @@ class HierarchicalPathValidator implements IValidationRule
     private array $hierarchyTree;
 
     /**
+     * @var string Custom error message
+     */
+    private readonly string $customMessage;
+
+    /**
      * Constructor for HierarchicalPathValidator.
      *
      * @param array<string, array<string>> $hierarchyTree Tree structure of valid parent-child relationships
+     * @param string|null $customMessage Optional custom error message
      */
-    public function __construct(array $hierarchyTree)
+    public function __construct(array $hierarchyTree, ?string $customMessage = null)
     {
         $this->hierarchyTree = $hierarchyTree;
+        $this->customMessage = $customMessage ??
+            __('The selected options do not form a valid hierarchical path.', 'wp-settings-kit');
     }
 
     /**
@@ -39,7 +53,7 @@ class HierarchicalPathValidator implements IValidationRule
         // Check each parent-child relationship in sequence
         for ($i = 0; $i < count($value) - 1; $i++) {
             $parent = $value[$i];
-            $child = $value[$i + 1];
+            $child  = $value[$i + 1];
 
             // If parent doesn't exist in hierarchy or child is not a valid child of parent
             if (!isset($this->hierarchyTree[$parent]) || !in_array($child, $this->hierarchyTree[$parent])) {
@@ -47,7 +61,7 @@ class HierarchicalPathValidator implements IValidationRule
             }
         }
 
-        return true;
+        return apply_filters('wp_settings_hierarchical_path_validator_result', true, $value, $this->hierarchyTree);
     }
 
     /**
@@ -57,7 +71,7 @@ class HierarchicalPathValidator implements IValidationRule
      */
     public function getMessage(): string
     {
-        return __('The selected options do not form a valid hierarchical path.', 'settings-manager');
+        return apply_filters('wp_settings_hierarchical_path_validator_message', $this->customMessage);
     }
 
     /**
@@ -77,6 +91,9 @@ class HierarchicalPathValidator implements IValidationRule
      */
     public function getParameters(): array
     {
-        return ['hierarchyTree' => $this->hierarchyTree];
+        return [
+            'hierarchyTree' => $this->hierarchyTree,
+            'customMessage' => $this->customMessage,
+        ];
     }
 }

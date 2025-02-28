@@ -2,37 +2,72 @@
 
 namespace WPSettingsKit\Builder\Decorator\SelectField;
 
-use WPSettingsKit\Builder\Interface\IFieldBuilderDecorator;
+use WPSettingsKit\Attribute\FieldDecorator;
+use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
 
 /**
- * Decorator for setting multiple select capability
+ * Decorator for enabling multiple selection in select fields.
  */
-class MultipleDecorator implements IFieldBuilderDecorator
+#[FieldDecorator(
+    type: 'select',
+    method: 'setMultiple',
+    priority: 20
+)]
+class MultipleDecorator extends AbstractFieldBuilderDecorator
 {
     /**
-     * @var bool Whether multiple selections are allowed
+     * @var bool Whether multiple selection is enabled
      */
     private bool $multiple;
 
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param bool $multiple Whether to allow multiple selections
+     * @param bool $multiple Whether to enable multiple selection
+     * @param int|null $priority Optional priority override
      */
-    public function __construct(bool $multiple = true)
+    public function __construct(bool $multiple = true, ?int $priority = null)
     {
+        parent::__construct($priority);
         $this->multiple = $multiple;
     }
 
     /**
-     * Apply multiple selection capability to configuration
-     *
-     * @param array<string, mixed> $config Current configuration
-     * @return array<string, mixed> Updated configuration
+     * {@inheritdoc}
+     */
+    protected function getConfigModifications(): array
+    {
+        $modifications = [
+            'multiple' => $this->multiple,
+            'attributes' => [
+                'multiple' => $this->multiple ? 'multiple' : null
+            ]
+        ];
+
+        // If enabling multiple, ensure the name attribute ends with [] for array processing
+        if ($this->multiple) {
+            $modifications['name_suffix'] = '[]';
+        }
+
+        return $modifications;
+    }
+
+    /**
+     * {@inheritdoc}
      */
     public function applyToConfig(array $config): array
     {
-        $config['multiple'] = $this->multiple;
+        $config = parent::applyToConfig($config);
+
+        // Ensure default value is an array if multiple is enabled
+        if ($this->multiple && isset($config['value']) && !is_array($config['value'])) {
+            if (empty($config['value'])) {
+                $config['value'] = [];
+            } else {
+                $config['value'] = [$config['value']];
+            }
+        }
+
         return $config;
     }
 }

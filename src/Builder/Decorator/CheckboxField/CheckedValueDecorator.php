@@ -2,12 +2,18 @@
 
 namespace WPSettingsKit\Builder\Decorator\CheckboxField;
 
-use WPSettingsKit\Builder\Interface\IFieldBuilderDecorator;
+use WPSettingsKit\Attribute\FieldDecorator;
+use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
 
 /**
- * Decorator for setting checked value on checkbox fields
+ * Decorator for setting the checked value of a checkbox field.
  */
-class CheckedValueDecorator implements IFieldBuilderDecorator
+#[FieldDecorator(
+    type: 'checkbox',
+    method: 'setCheckedValue',
+    priority: 10
+)]
+class CheckedValueDecorator extends AbstractFieldBuilderDecorator
 {
     /**
      * @var mixed Value when checkbox is checked
@@ -15,24 +21,41 @@ class CheckedValueDecorator implements IFieldBuilderDecorator
     private mixed $checkedValue;
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param mixed $checkedValue Value when checkbox is checked
+     * @param int|null $priority Optional priority override
      */
-    public function __construct(mixed $checkedValue)
+    public function __construct(mixed $checkedValue, ?int $priority = null)
     {
+        parent::__construct($priority);
         $this->checkedValue = $checkedValue;
     }
 
     /**
-     * Apply checked value to configuration
-     *
-     * @param array<string, mixed> $config Current configuration
-     * @return array<string, mixed> Updated configuration
+     * {@inheritdoc}
+     */
+    protected function getConfigModifications(): array
+    {
+        return [
+            'checked_value' => $this->checkedValue,
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
      */
     public function applyToConfig(array $config): array
     {
-        $config['checked_value'] = $this->checkedValue;
+        $config = parent::applyToConfig($config);
+
+        // Modify the HTML value attribute
+        if (!isset($config['attributes'])) {
+            $config['attributes'] = [];
+        }
+
+        $config['attributes']['value'] = $this->checkedValue;
+
         return $config;
     }
 }

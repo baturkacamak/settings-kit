@@ -2,37 +2,86 @@
 
 namespace WPSettingsKit\Builder\Decorator\CheckboxField;
 
-use WPSettingsKit\Builder\Interface\IFieldBuilderDecorator;
+use WPSettingsKit\Attribute\FieldDecorator;
+use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
 
 /**
- * Decorator for styling checkbox as switch
+ * Decorator for styling checkbox as a toggle switch.
  */
-class SwitchStyleDecorator implements IFieldBuilderDecorator
+#[FieldDecorator(
+    type: 'checkbox',
+    method: 'setSwitchStyle',
+    priority: 25
+)]
+class SwitchStyleDecorator extends AbstractFieldBuilderDecorator
 {
     /**
-     * @var bool Whether to style as switch
+     * @var bool Whether to style as a switch
      */
     private bool $switchStyle;
 
     /**
-     * Constructor
-     *
-     * @param bool $switchStyle Whether to style checkbox as switch
+     * @var string|null On text label
      */
-    public function __construct(bool $switchStyle = true)
-    {
+    private ?string $onText;
+
+    /**
+     * @var string|null Off text label
+     */
+    private ?string $offText;
+
+    /**
+     * Constructor.
+     *
+     * @param bool $switchStyle Whether to style as a switch
+     * @param string|null $onText Text to display when switch is on
+     * @param string|null $offText Text to display when switch is off
+     * @param int|null $priority Optional priority override
+     */
+    public function __construct(
+        bool $switchStyle = true,
+        ?string $onText = null,
+        ?string $offText = null,
+        ?int $priority = null
+    ) {
+        parent::__construct($priority);
         $this->switchStyle = $switchStyle;
+        $this->onText = $onText;
+        $this->offText = $offText;
     }
 
     /**
-     * Apply switch style to configuration
-     *
-     * @param array<string, mixed> $config Current configuration
-     * @return array<string, mixed> Updated configuration
+     * {@inheritdoc}
      */
-    public function applyToConfig(array $config): array
+    protected function getConfigModifications(): array
     {
-        $config['switch_style'] = $this->switchStyle;
-        return $config;
+        $modifications = [
+            'switch_style' => $this->switchStyle,
+        ];
+
+        if ($this->onText !== null) {
+            $modifications['on_text'] = $this->onText;
+        }
+
+        if ($this->offText !== null) {
+            $modifications['off_text'] = $this->offText;
+        }
+
+        // Add necessary attributes and classes for switch styling
+        if ($this->switchStyle) {
+            if (!isset($modifications['attributes'])) {
+                $modifications['attributes'] = [];
+            }
+
+            $modifications['attributes']['data-toggle'] = 'switch';
+
+            // Add classes for switch styling
+            $class = 'wsk-switch';
+            $modifications['css_class'] = isset($modifications['css_class'])
+                ? $modifications['css_class'] . ' ' . $class
+                : $class;
+        }
+
+        return $modifications;
     }
 }

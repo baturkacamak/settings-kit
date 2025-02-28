@@ -2,12 +2,18 @@
 
 namespace WPSettingsKit\Builder\Decorator\TextField;
 
-use WPSettingsKit\Builder\Interface\IFieldBuilderDecorator;
+use WPSettingsKit\Attribute\FieldDecorator;
+use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
 
 /**
- * Decorator for setting input type on text fields
+ * Decorator for setting input type on text fields.
  */
-class InputTypeDecorator implements IFieldBuilderDecorator
+#[FieldDecorator(
+    type: 'text',
+    method: 'setInputType',
+    priority: 15
+)]
+class InputTypeDecorator extends AbstractFieldBuilderDecorator
 {
     /**
      * @var string HTML input type
@@ -17,27 +23,30 @@ class InputTypeDecorator implements IFieldBuilderDecorator
     /**
      * @var array<string> Valid input types
      */
-    private array $validTypes = ['text', 'email', 'url', 'tel', 'password', 'number', 'search'];
+    private array $validTypes = ['text', 'email', 'url', 'tel', 'password', 'number', 'search', 'date', 'time', 'datetime-local', 'month', 'week', 'color'];
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param string $inputType HTML input type
+     * @param int|null $priority Optional priority override
      */
-    public function __construct(string $inputType)
+    public function __construct(string $inputType, ?int $priority = null)
     {
+        parent::__construct($priority);
         $this->inputType = in_array($inputType, $this->validTypes) ? $inputType : 'text';
     }
 
     /**
-     * Apply input type to configuration
-     *
-     * @param array<string, mixed> $config Current configuration
-     * @return array<string, mixed> Updated configuration
+     * {@inheritdoc}
      */
-    public function applyToConfig(array $config): array
+    protected function getConfigModifications(): array
     {
-        $config['input_type'] = $this->inputType;
-        return $config;
+        return [
+            'input_type' => $this->inputType,
+            'attributes' => [
+                'type' => $this->inputType
+            ]
+        ];
     }
 }

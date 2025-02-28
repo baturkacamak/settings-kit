@@ -1,13 +1,19 @@
 <?php
 
-namespace WPSettingsKit\Validation\Rules\SelectField;
+namespace WPSettingsKit\Validation\Rules\Select;
 
+use WPSettingsKit\Attribute\ValidationRule;
 use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that the combined selections meet a budget/allowance constraint.
  */
-class AllowanceValidator implements IValidationRule
+#[ValidationRule(
+    type: ['select', 'checkbox'],
+    method: 'addAllowanceValidation',
+    priority: 50
+)]
+class AllowanceValidationRule implements IValidationRule
 {
     /**
      * @var array<string, int> Values representing the "cost" of each option
@@ -20,15 +26,25 @@ class AllowanceValidator implements IValidationRule
     private int $maxAllowance;
 
     /**
+     * @var string Custom error message
+     */
+    private readonly string $customMessage;
+
+    /**
      * Constructor for AllowanceValidator.
      *
      * @param array<string, int> $optionCosts The "cost" values for each option
      * @param int $maxAllowance The maximum total allowance/budget permitted
+     * @param string|null $customMessage Optional custom error message
      */
-    public function __construct(array $optionCosts, int $maxAllowance)
+    public function __construct(array $optionCosts, int $maxAllowance, ?string $customMessage = null)
     {
-        $this->optionCosts = $optionCosts;
-        $this->maxAllowance = $maxAllowance;
+        $this->optionCosts   = $optionCosts;
+        $this->maxAllowance  = $maxAllowance;
+        $this->customMessage = $customMessage ?? sprintf(
+            __('Your selections exceed the maximum allowance of %d.', 'wp-settings-kit'),
+            $maxAllowance
+        );
     }
 
     /**
@@ -49,7 +65,8 @@ class AllowanceValidator implements IValidationRule
             $total = $this->optionCosts[$value] ?? 0;
         }
 
-        return $total <= $this->maxAllowance;
+        $result = $total <= $this->maxAllowance;
+        return apply_filters('wp_settings_allowance_validator_result', $result, $value, $this->optionCosts, $this->maxAllowance);
     }
 
     /**
@@ -59,10 +76,7 @@ class AllowanceValidator implements IValidationRule
      */
     public function getMessage(): string
     {
-        return sprintf(
-            __('Your selections exceed the maximum allowance of %d.', 'settings-manager'),
-            $this->maxAllowance
-        );
+        return apply_filters('wp_settings_allowance_validator_message', $this->customMessage, $this->maxAllowance);
     }
 
     /**
@@ -83,8 +97,9 @@ class AllowanceValidator implements IValidationRule
     public function getParameters(): array
     {
         return [
-            'optionCosts' => $this->optionCosts,
-            'maxAllowance' => $this->maxAllowance
+            'optionCosts'   => $this->optionCosts,
+            'maxAllowance'  => $this->maxAllowance,
+            'customMessage' => $this->customMessage,
         ];
     }
 }

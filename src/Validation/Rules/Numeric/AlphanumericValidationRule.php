@@ -1,13 +1,19 @@
 <?php
 
-namespace WPSettingsKit\Validation\Rules\Numeric;
+namespace WPSettingsKit\Validation\Rules\Common;
 
+use WPSettingsKit\Attribute\ValidationRule;
 use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that a string contains only alphanumeric characters.
  */
-class AlphanumericValidator implements IValidationRule
+#[ValidationRule(
+    type: ['text', 'password'],
+    method: 'addAlphanumericValidation',
+    priority: 25
+)]
+class AlphanumericValidationRule implements IValidationRule
 {
     /**
      * @var bool Whether to allow spaces.
@@ -25,14 +31,20 @@ class AlphanumericValidator implements IValidationRule
     private readonly string $pattern;
 
     /**
+     * @var string Custom error message
+     */
+    private readonly string $customMessage;
+
+    /**
      * Constructor for AlphanumericValidator.
      *
      * @param bool $allowSpaces Whether to allow spaces in the string.
      * @param array<string> $additionalChars Additional allowed characters.
+     * @param string|null $customMessage Optional custom error message.
      */
-    public function __construct(bool $allowSpaces = false, array $additionalChars = [])
+    public function __construct(bool $allowSpaces = false, array $additionalChars = [], ?string $customMessage = null)
     {
-        $this->allowSpaces = $allowSpaces;
+        $this->allowSpaces     = $allowSpaces;
         $this->additionalChars = $additionalChars;
 
         // Build the pattern with additional chars if specified
@@ -41,8 +53,26 @@ class AlphanumericValidator implements IValidationRule
             $additionalCharsPattern = preg_quote(implode('', $additionalChars), '/');
         }
 
-        $spacePattern = $allowSpaces ? '\s' : '';
-        $this->pattern = '/^[a-zA-Z0-9' . $spacePattern . $additionalCharsPattern . ']+$/';
+        $spacePattern  = $allowSpaces ? '\s' : '';
+        $this->pattern = '/^[a-zA-Z0-9' . $spacePattern . $additionalCharsPattern . ']+$/u';
+
+        // Generate custom message
+        if ($customMessage === null) {
+            $message = __('This field may only contain letters and numbers', 'wp-settings-kit');
+
+            if ($this->allowSpaces) {
+                $message .= __(' and spaces', 'wp-settings-kit');
+            }
+
+            if (!empty($this->additionalChars)) {
+                $charsString = implode(' ', $this->additionalChars);
+                $message     .= sprintf(__(' and the characters: %s', 'wp-settings-kit'), $charsString);
+            }
+
+            $this->customMessage = $message . '.';
+        } else {
+            $this->customMessage = $customMessage;
+        }
     }
 
     /**
@@ -74,18 +104,12 @@ class AlphanumericValidator implements IValidationRule
      */
     public function getMessage(): string
     {
-        $message = __('This field may only contain letters and numbers', 'settings-manager');
-
-        if ($this->allowSpaces) {
-            $message .= __(' and spaces', 'settings-manager');
-        }
-
-        if (!empty($this->additionalChars)) {
-            $charsString = implode(' ', $this->additionalChars);
-            $message .= sprintf(__(' and the characters: %s', 'settings-manager'), $charsString);
-        }
-
-        return $message . '.';
+        return apply_filters(
+            'wp_settings_alphanumeric_validator_message',
+            $this->customMessage,
+            $this->allowSpaces,
+            $this->additionalChars
+        );
     }
 
     /**
@@ -106,8 +130,10 @@ class AlphanumericValidator implements IValidationRule
     public function getParameters(): array
     {
         return [
-            'allowSpaces' => $this->allowSpaces,
-            'additionalChars' => $this->additionalChars
+            'allowSpaces'     => $this->allowSpaces,
+            'additionalChars' => $this->additionalChars,
+            'pattern'         => $this->pattern,
+            'customMessage'   => $this->customMessage,
         ];
     }
 }

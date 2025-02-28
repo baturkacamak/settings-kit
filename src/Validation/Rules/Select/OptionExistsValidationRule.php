@@ -1,13 +1,19 @@
 <?php
 
-namespace WPSettingsKit\Validation\Rules\SelectField;
+namespace WPSettingsKit\Validation\Rules\Select;
 
+use WPSettingsKit\Attribute\ValidationRule;
 use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that a selected option exists in the available options array.
  */
-class OptionExistsValidator implements IValidationRule
+#[ValidationRule(
+    type: ['select', 'radio', 'checkbox'],
+    method: 'addOptionExistsValidation',
+    priority: 10
+)]
+class OptionExistsValidationRule implements IValidationRule
 {
     /**
      * @var array<string, string> The available options for validation
@@ -15,13 +21,21 @@ class OptionExistsValidator implements IValidationRule
     private array $availableOptions;
 
     /**
+     * @var string Custom error message
+     */
+    private readonly string $customMessage;
+
+    /**
      * Constructor for OptionExistsValidator.
      *
      * @param array<string, string> $availableOptions The available options to validate against
+     * @param string|null $customMessage Optional custom error message
      */
-    public function __construct(array $availableOptions)
+    public function __construct(array $availableOptions, ?string $customMessage = null)
     {
         $this->availableOptions = $availableOptions;
+        $this->customMessage    = $customMessage ??
+            __('The selected option is invalid.', 'wp-settings-kit');
     }
 
     /**
@@ -54,8 +68,7 @@ class OptionExistsValidator implements IValidationRule
      */
     public function getMessage(): string
     {
-        $message = __('The selected option is invalid.', 'settings-manager');
-        return apply_filters('wp_settings_option_exists_validator_message', $message);
+        return apply_filters('wp_settings_option_exists_validator_message', $this->customMessage);
     }
 
     /**
@@ -75,6 +88,9 @@ class OptionExistsValidator implements IValidationRule
      */
     public function getParameters(): array
     {
-        return ['availableOptions' => $this->availableOptions];
+        return [
+            'availableOptions' => $this->availableOptions,
+            'customMessage'    => $this->customMessage,
+        ];
     }
 }

@@ -3,12 +3,18 @@
 namespace WPSettingsKit\Validation\Rules\Text;
 
 use DateTime;
+use WPSettingsKit\Attribute\ValidationRule;
 use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that a string represents a valid date in the specified format.
  */
-class DateValidator implements IValidationRule
+#[ValidationRule(
+    type: ['text', 'date'],
+    method: 'addDateValidation',
+    priority: 30
+)]
+class DateValidationRule implements IValidationRule
 {
     /**
      * @var string The date format (PHP date format).
@@ -26,22 +32,60 @@ class DateValidator implements IValidationRule
     private readonly ?DateTime $maxDate;
 
     /**
+     * @var string Custom error message
+     */
+    private readonly string $customMessage;
+
+    /**
      * Constructor for DateValidator.
      *
      * @param string $format The date format (PHP date format, e.g., 'Y-m-d').
      * @param string|DateTime|null $minDate The minimum allowed date, or null if no minimum.
      * @param string|DateTime|null $maxDate The maximum allowed date, or null if no maximum.
+     * @param string|null $customMessage Optional custom error message.
      */
     public function __construct(
         string $format = 'Y-m-d',
         string|DateTime|null $minDate = null,
-        string|DateTime|null $maxDate = null
+        string|DateTime|null $maxDate = null,
+        ?string $customMessage = null
     ) {
         $this->format = $format;
 
         // Convert string dates to DateTime objects
-        $this->minDate = $this->parseDate($minDate);
-        $this->maxDate = $this->parseDate($maxDate);
+        $this->minDate = $this->parseDate($minDate, $format);
+        $this->maxDate = $this->parseDate($maxDate, $format);
+
+        // Generate custom message if not provided
+        if ($customMessage === null) {
+            if ($this->minDate !== null && $this->maxDate !== null) {
+                $this->customMessage = sprintf(
+                    __('Please enter a valid date between %s and %s in the format %s.', 'wp-settings-kit'),
+                    $this->minDate->format($this->format),
+                    $this->maxDate->format($this->format),
+                    $this->format
+                );
+            } elseif ($this->minDate !== null) {
+                $this->customMessage = sprintf(
+                    __('Please enter a valid date on or after %s in the format %s.', 'wp-settings-kit'),
+                    $this->minDate->format($this->format),
+                    $this->format
+                );
+            } elseif ($this->maxDate !== null) {
+                $this->customMessage = sprintf(
+                    __('Please enter a valid date on or before %s in the format %s.', 'wp-settings-kit'),
+                    $this->maxDate->format($this->format),
+                    $this->format
+                );
+            } else {
+                $this->customMessage = sprintf(
+                    __('Please enter a valid date in the format %s.', 'wp-settings-kit'),
+                    $this->format
+                );
+            }
+        } else {
+            $this->customMessage = $customMessage;
+        }
     }
 
     /**
@@ -82,30 +126,12 @@ class DateValidator implements IValidationRule
      */
     public function getMessage(): string
     {
-        if ($this->minDate !== null && $this->maxDate !== null) {
-            return sprintf(
-                __('Please enter a valid date between %s and %s in the format %s.', 'settings-manager'),
-                $this->minDate->format($this->format),
-                $this->maxDate->format($this->format),
-                $this->format
-            );
-        } elseif ($this->minDate !== null) {
-            return sprintf(
-                __('Please enter a valid date on or after %s in the format %s.', 'settings-manager'),
-                $this->minDate->format($this->format),
-                $this->format
-            );
-        } elseif ($this->maxDate !== null) {
-            return sprintf(
-                __('Please enter a valid date on or before %s in the format %s.', 'settings-manager'),
-                $this->maxDate->format($this->format),
-                $this->format
-            );
-        }
-
-        return sprintf(
-            __('Please enter a valid date in the format %s.', 'settings-manager'),
-            $this->format
+        return apply_filters(
+            'wp_settings_date_validator_message',
+            $this->customMessage,
+            $this->format,
+            $this->minDate,
+            $this->maxDate
         );
     }
 
@@ -129,7 +155,8 @@ class DateValidator implements IValidationRule
         return [
             'format' => $this->format,
             'minDate' => $this->minDate ? $this->minDate->format($this->format) : null,
-            'maxDate' => $this->maxDate ? $this->maxDate->format($this->format) : null
+            'maxDate' => $this->maxDate ? $this->maxDate->format($this->format) : null,
+            'customMessage' => $this->customMessage
         ];
     }
 
@@ -137,9 +164,10 @@ class DateValidator implements IValidationRule
      * Parses a date from various formats into a DateTime object.
      *
      * @param string|DateTime|null $date The date to parse.
+     * @param string $format The expected date format.
      * @return DateTime|null The parsed DateTime object or null.
      */
-    private function parseDate(string|DateTime|null $date): ?DateTime
+    private function parseDate(string|DateTime|null $date, string $format): ?DateTime
     {
         if ($date === null) {
             return null;
@@ -150,11 +178,15 @@ class DateValidator implements IValidationRule
         }
 
         // Try to create from the specified format
-        $parsedDate = DateTime::createFromFormat($this->format, $date);
+        $parsedDate = DateTime::createFromFormat($format, $date);
 
         // If that fails, try standard format
         if ($parsedDate === false) {
-            $parsedDate = new DateTime($date);
+            try {
+                $parsedDate = new DateTime($date);
+            } catch (\Exception $e) {
+                return null;
+            }
         }
 
         return $parsedDate;

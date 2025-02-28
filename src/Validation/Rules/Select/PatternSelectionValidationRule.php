@@ -1,13 +1,19 @@
 <?php
 
-namespace WPSettingsKit\Validation\Rules\SelectField;
+namespace WPSettingsKit\Validation\Rules\Select;
 
+use WPSettingsKit\Attribute\ValidationRule;
 use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that a selection matches a specific pattern or format.
  */
-class PatternSelectionValidator implements IValidationRule
+#[ValidationRule(
+    type: ['select', 'radio'],
+    method: 'addPatternSelectionValidation',
+    priority: 45
+)]
+class PatternSelectionValidationRule implements IValidationRule
 {
     /**
      * @var string The regex pattern to match against
@@ -20,15 +26,34 @@ class PatternSelectionValidator implements IValidationRule
     private string $patternDescription;
 
     /**
+     * @var string Custom error message
+     */
+    private readonly string $customMessage;
+
+    /**
      * Constructor for PatternSelectionValidator.
      *
      * @param string $pattern The regex pattern for validation
      * @param string $patternDescription Human-readable description of the pattern
+     * @param string|null $customMessage Optional custom error message
      */
-    public function __construct(string $pattern, string $patternDescription = '')
+    public function __construct(string $pattern, string $patternDescription = '', ?string $customMessage = null)
     {
-        $this->pattern = $pattern;
+        $this->pattern            = $pattern;
         $this->patternDescription = $patternDescription;
+
+        if ($customMessage === null) {
+            if (!empty($patternDescription)) {
+                $this->customMessage = sprintf(
+                    __('The selected option must match the format: %s', 'wp-settings-kit'),
+                    $patternDescription
+                );
+            } else {
+                $this->customMessage = __('The selected option is in an invalid format.', 'wp-settings-kit');
+            }
+        } else {
+            $this->customMessage = $customMessage;
+        }
     }
 
     /**
@@ -42,7 +67,7 @@ class PatternSelectionValidator implements IValidationRule
         if (is_array($value)) {
             // For multi-select, all items must match the pattern
             foreach ($value as $item) {
-                if (!is_string($item) || !preg_match($this->pattern, $item)) {
+                if (!is_string($item) || preg_match($this->pattern, $item) !== 1) {
                     return false;
                 }
             }
@@ -54,7 +79,8 @@ class PatternSelectionValidator implements IValidationRule
             return false;
         }
 
-        return preg_match($this->pattern, $value) === 1;
+        $result = preg_match($this->pattern, $value) === 1;
+        return apply_filters('wp_settings_pattern_selection_validator_result', $result, $value, $this->pattern);
     }
 
     /**
@@ -64,14 +90,12 @@ class PatternSelectionValidator implements IValidationRule
      */
     public function getMessage(): string
     {
-        if ($this->patternDescription) {
-            return sprintf(
-                __('The selected option must match the format: %s', 'settings-manager'),
-                $this->patternDescription
-            );
-        }
-
-        return __('The selected option is in an invalid format.', 'settings-manager');
+        return apply_filters(
+            'wp_settings_pattern_selection_validator_message',
+            $this->customMessage,
+            $this->pattern,
+            $this->patternDescription
+        );
     }
 
     /**
@@ -92,8 +116,9 @@ class PatternSelectionValidator implements IValidationRule
     public function getParameters(): array
     {
         return [
-            'pattern' => $this->pattern,
-            'patternDescription' => $this->patternDescription
+            'pattern'            => $this->pattern,
+            'patternDescription' => $this->patternDescription,
+            'customMessage'      => $this->customMessage,
         ];
     }
 }

@@ -1,13 +1,19 @@
 <?php
 
-namespace WPSettingsKit\Validation\Rules\SelectField;
+namespace WPSettingsKit\Validation\Rules\Select;
 
+use WPSettingsKit\Attribute\ValidationRule;
 use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that selected option(s) from one field are compatible with another field's selection.
  */
-class DependentSelectionValidator implements IValidationRule
+#[ValidationRule(
+    type: ['select', 'checkbox', 'radio'],
+    method: 'addDependentSelectionValidation',
+    priority: 60
+)]
+class DependentSelectionValidationRule implements IValidationRule
 {
     /**
      * @var string The key of the field this validation depends on
@@ -25,15 +31,27 @@ class DependentSelectionValidator implements IValidationRule
     private mixed $dependentFieldValue = null;
 
     /**
+     * @var string Custom error message
+     */
+    private readonly string $customMessage;
+
+    /**
      * Constructor for DependentSelectionValidator.
      *
      * @param string $dependentFieldKey The key of the field this validation depends on
      * @param array<string, array<string>> $allowedValueMap Map of allowed values based on dependent field values
+     * @param string|null $customMessage Optional custom error message
      */
-    public function __construct(string $dependentFieldKey, array $allowedValueMap)
+    public function __construct(
+        string  $dependentFieldKey,
+        array   $allowedValueMap,
+        ?string $customMessage = null
+    )
     {
         $this->dependentFieldKey = $dependentFieldKey;
         $this->allowedValueMap   = $allowedValueMap;
+        $this->customMessage     = $customMessage ??
+            __('The selected option is not compatible with related field values.', 'wp-settings-kit');
     }
 
     /**
@@ -81,7 +99,13 @@ class DependentSelectionValidator implements IValidationRule
 
         // Single select validation
         $result = in_array($value, $allowedValues);
-        return apply_filters('wp_settings_dependent_selection_validator_result', $result, $value, $this->dependentFieldValue, $this->allowedValueMap);
+        return apply_filters(
+            'wp_settings_dependent_selection_validator_result',
+            $result,
+            $value,
+            $this->dependentFieldValue,
+            $this->allowedValueMap
+        );
     }
 
     /**
@@ -91,8 +115,11 @@ class DependentSelectionValidator implements IValidationRule
      */
     public function getMessage(): string
     {
-        $message = __('The selected option is not compatible with related field values.', 'settings-manager');
-        return apply_filters('wp_settings_dependent_selection_validator_message', $message, $this->dependentFieldKey);
+        return apply_filters(
+            'wp_settings_dependent_selection_validator_message',
+            $this->customMessage,
+            $this->dependentFieldKey
+        );
     }
 
     /**
@@ -116,6 +143,7 @@ class DependentSelectionValidator implements IValidationRule
             'dependentFieldKey'   => $this->dependentFieldKey,
             'allowedValueMap'     => $this->allowedValueMap,
             'dependentFieldValue' => $this->dependentFieldValue,
+            'customMessage'       => $this->customMessage,
         ];
     }
 }

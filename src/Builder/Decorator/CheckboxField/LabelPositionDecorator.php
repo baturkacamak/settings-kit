@@ -2,37 +2,43 @@
 
 namespace WPSettingsKit\Builder\Decorator\CheckboxField;
 
-use WPSettingsKit\Builder\Interface\IFieldBuilderDecorator;
+use WPSettingsKit\Attribute\FieldDecorator;
+use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
 
 /**
- * Decorator for setting label position on checkbox fields
+ * Decorator for setting the label position of a checkbox field.
  */
-class LabelPositionDecorator implements IFieldBuilderDecorator
+#[FieldDecorator(
+    type: 'checkbox',
+    method: 'setLabelPosition',
+    priority: 20
+)]
+class LabelPositionDecorator extends AbstractFieldBuilderDecorator
 {
     /**
-     * @var string Label position
+     * @var string Label position ('before' or 'after')
      */
     private string $position;
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param string $position Label position ('before' or 'after')
+     * @param int|null $priority Optional priority override
      */
-    public function __construct(string $position)
+    public function __construct(string $position, ?int $priority = null)
     {
+        parent::__construct($priority);
         $this->position = in_array($position, ['before', 'after']) ? $position : 'after';
     }
 
     /**
-     * Apply label position to configuration
-     *
-     * @param array<string, mixed> $config Current configuration
-     * @return array<string, mixed> Updated configuration
+     * {@inheritdoc}
      */
-    public function applyToConfig(array $config): array
+    protected function getConfigModifications(): array
     {
-        $config['label_position'] = $this->position;
-        return $config;
+        return [
+            'label_position' => $this->position,
+        ];
     }
 }

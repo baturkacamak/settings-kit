@@ -1,13 +1,19 @@
 <?php
 
-namespace WPSettingsKit\Validation\Rules\SelectField;
+namespace WPSettingsKit\Validation\Rules\Select;
 
+use WPSettingsKit\Attribute\ValidationRule;
 use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that the number of selected options does not exceed a maximum limit.
  */
-class MaxSelectionsValidator implements IValidationRule
+#[ValidationRule(
+    type: ['select', 'checkbox'],
+    method: 'addMaxSelectionsValidation',
+    priority: 40
+)]
+class MaxSelectionsValidationRule implements IValidationRule
 {
     /**
      * @var int The maximum number of selections allowed
@@ -15,13 +21,23 @@ class MaxSelectionsValidator implements IValidationRule
     private int $maxSelections;
 
     /**
+     * @var string Custom error message
+     */
+    private readonly string $customMessage;
+
+    /**
      * Constructor for MaxSelectionsValidator.
      *
      * @param int $maxSelections The maximum number of selections allowed
+     * @param string|null $customMessage Optional custom error message
      */
-    public function __construct(int $maxSelections)
+    public function __construct(int $maxSelections, ?string $customMessage = null)
     {
         $this->maxSelections = $maxSelections;
+        $this->customMessage = $customMessage ?? sprintf(
+            __('Please select no more than %d option(s).', 'wp-settings-kit'),
+            $maxSelections
+        );
     }
 
     /**
@@ -36,7 +52,7 @@ class MaxSelectionsValidator implements IValidationRule
             return true; // Single selection always meets max requirement
         }
 
-        $count = count($value);
+        $count  = count($value);
         $result = $count <= $this->maxSelections;
 
         return apply_filters('wp_settings_max_selections_validator_result', $result, $value, $this->maxSelections);
@@ -49,11 +65,7 @@ class MaxSelectionsValidator implements IValidationRule
      */
     public function getMessage(): string
     {
-        $message = sprintf(
-            __('Please select no more than %d option(s).', 'settings-manager'),
-            $this->maxSelections
-        );
-        return apply_filters('wp_settings_max_selections_validator_message', $message, $this->maxSelections);
+        return apply_filters('wp_settings_max_selections_validator_message', $this->customMessage, $this->maxSelections);
     }
 
     /**
@@ -73,6 +85,9 @@ class MaxSelectionsValidator implements IValidationRule
      */
     public function getParameters(): array
     {
-        return ['maxSelections' => $this->maxSelections];
+        return [
+            'maxSelections' => $this->maxSelections,
+            'customMessage' => $this->customMessage,
+        ];
     }
 }

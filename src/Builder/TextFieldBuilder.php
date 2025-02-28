@@ -2,150 +2,118 @@
 
 namespace WPSettingsKit\Builder;
 
-use WPSettingsKit\Builder\Decorator\CssClassDecorator;
-use WPSettingsKit\Builder\Decorator\DefaultValueDecorator;
-use WPSettingsKit\Builder\Decorator\DescriptionDecorator;
-use WPSettingsKit\Builder\Decorator\DisabledDecorator;
-use WPSettingsKit\Builder\Decorator\RequiredDecorator;
-use WPSettingsKit\Builder\Decorator\TextField\InputTypeDecorator;
-use WPSettingsKit\Builder\Decorator\TextField\MaxLengthDecorator;
-use WPSettingsKit\Builder\Decorator\TextField\MinLengthDecorator;
-use WPSettingsKit\Builder\Decorator\TextField\PlaceholderDecorator;
-use WPSettingsKit\Builder\Decorator\TextField\ReadonlyDecorator;
 use WPSettingsKit\Field\Base\Interface\IField;
 use WPSettingsKit\Field\Basic\TextField;
+use WPSettingsKit\Validation\Rules\Common\LengthValidationRule;
+use WPSettingsKit\Validation\Rules\Common\LengthValidatorEnhanced;
+use WPSettingsKit\Validation\Rules\Common\PatternValidationRule;
+use WPSettingsKit\Validation\Rules\Common\PatternValidatorEnhanced;
+use WPSettingsKit\Validation\Rules\Text\EmailValidationRule;
+use WPSettingsKit\Validation\Rules\Text\EmailValidatorEnhanced;
+use WPSettingsKit\Validation\Rules\Text\UrlValidationRule;
 
 /**
- * Builder for text fields using decorator pattern
+ * Builder for text fields with automatic decorator support.
+ *
+ * Provides a fluent interface for configuring and building text field objects.
  */
 class TextFieldBuilder extends BaseFieldBuilder
 {
     /**
-     * Set placeholder text
+     * Constructor.
      *
-     * @param string $placeholder Placeholder text
-     * @return self
+     * @param string $key Field unique key
+     * @param string $label Field display label
      */
-    public function setPlaceholder(string $placeholder): self
+    public function __construct(string $key, string $label)
     {
-        return $this->addDecorator(new PlaceholderDecorator($placeholder));
+        parent::__construct($key, $label, 'text');
     }
 
     /**
-     * Set maximum length and add corresponding validator
+     * Sets the input type (text, email, url, etc.).
      *
-     * @param int $maxLength Maximum character length
-     * @return self
-     */
-    public function setMaxLength(int $maxLength): self
-    {
-        $this->addDecorator(new MaxLengthDecorator($maxLength));
-
-        // Automatically add validation rule
-        if ($maxLength > 0) {
-            $this->addValidationRule(new LengthValidator($maxLength));
-        }
-
-        return $this;
-    }
-
-    /**
-     * Set minimum length and add corresponding validator
-     *
-     * @param int $minLength Minimum character length
-     * @return self
-     */
-    public function setMinLength(int $minLength): self
-    {
-        $this->addDecorator(new MinLengthDecorator($minLength));
-
-        // Automatically add validation rule for minimum length
-        if ($minLength > 0) {
-            $this->addValidationRule(new MinLengthValidator($minLength));
-        }
-
-        return $this;
-    }
-
-    /**
-     * Set input type
-     *
-     * @param string $type HTML input type (text, email, url, etc.)
-     * @return self
+     * @param string $type HTML input type
+     * @return self For method chaining
      */
     public function setInputType(string $type): self
     {
-        return $this->addDecorator(new InputTypeDecorator($type));
+        $validTypes                 = ['text', 'email', 'url', 'tel', 'password', 'number', 'search'];
+        $this->config['input_type'] = in_array($type, $validTypes) ? $type : 'text';
+
+        // Automatically add appropriate validation based on type
+        if ($type === 'email') {
+            $this->addEmailRule();
+        } elseif ($type === 'url') {
+            $this->addUrlRule();
+        } elseif ($type === 'tel') {
+            $this->addPatternRule('/^[0-9+\-\s()]*$/', 'Valid phone number format');
+        }
+
+        return $this;
     }
 
     /**
-     * Set field as readonly
+     * Adds an email validation rule.
      *
-     * @param bool $readonly Whether field is readonly
-     * @return self
+     * @param bool $checkDns Whether to verify domain has valid MX records
+     * @param string|null $customMessage Optional custom error message
+     * @return self For method chaining
      */
-    public function setReadonly(bool $readonly = true): self
+    public function addEmailRule(bool $checkDns = false, ?string $customMessage = null): self
     {
-        return $this->addDecorator(new ReadonlyDecorator($readonly));
+        return $this->addValidationRule(
+            new EmailValidationRule($checkDns, $customMessage)
+        );
     }
 
     /**
-     * Set field as disabled
+     * Adds a URL validation rule.
      *
-     * @param bool $disabled Whether field is disabled
-     * @return self
+     * @param array<string>|null $allowedSchemes Allowed URL schemes
+     * @param string|null $customMessage Optional custom error message
+     * @return self For method chaining
      */
-    public function setDisabled(bool $disabled = true): self
+    public function addUrlRule(?array $allowedSchemes = null, ?string $customMessage = null): self
     {
-        return $this->addDecorator(new DisabledDecorator($disabled));
+        $schemes = $allowedSchemes ?? ['http', 'https'];
+        return $this->addValidationRule(
+            new UrlValidationRule($schemes, false, $customMessage)
+        );
     }
 
     /**
-     * Set field as required
+     * Adds a pattern validation rule.
      *
-     * @param bool $required Whether field is required
-     * @return self
+     * @param string $pattern Regular expression pattern
+     * @param string $description Human-readable description of the pattern
+     * @param string|null $customMessage Optional custom error message
+     * @return self For method chaining
      */
-    public function setRequired(bool $required = true): self
+    public function addPatternRule(string $pattern, string $description = '', ?string $customMessage = null): self
     {
-        return $this->addDecorator(new RequiredDecorator($required));
+        return $this->addValidationRule(
+            new PatternValidationRule($pattern, $description, $customMessage)
+        );
     }
 
     /**
-     * Set field description
+     * Adds a length validation rule.
      *
-     * @param string $description Field description text
-     * @return self
+     * @param int|null $minLength Minimum allowed length
+     * @param int|null $maxLength Maximum allowed length
+     * @param string|null $customMessage Optional custom error message
+     * @return self For method chaining
      */
-    public function setDescription(string $description): self
+    public function addLengthRule(?int $minLength = null, ?int $maxLength = null, ?string $customMessage = null): self
     {
-        return $this->addDecorator(new DescriptionDecorator($description));
+        return $this->addValidationRule(
+            new LengthValidationRule($minLength, $maxLength, $customMessage)
+        );
     }
 
     /**
-     * Set default value
-     *
-     * @param string $value Default field value
-     * @return self
-     */
-    public function setDefaultValue(string $value): self
-    {
-        return $this->addDecorator(new DefaultValueDecorator($value));
-    }
-
-    /**
-     * Set CSS classes
-     *
-     * @param string $cssClass CSS classes to add
-     * @return self
-     */
-    public function setCssClass(string $cssClass): self
-    {
-        return $this->addDecorator(new CssClassDecorator($cssClass));
-    }
-
-    /**
-     * Build and return a TextField
+     * Builds and returns a TextField.
      *
      * @return IField The configured text field
      */

@@ -1,29 +1,29 @@
 <?php
 
-namespace WPSettingsKit\Builder\Decorator\SelectField;
+namespace WPSettingsKit\Builder\Decorator\TextField;
 
 use WPSettingsKit\Attribute\FieldDecorator;
 use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
 
 /**
- * Decorator for setting the visible number of options in a select field.
+ * Decorator for setting the size of text fields.
  */
 #[FieldDecorator(
-    type: 'select',
+    type: 'text',
     method: 'setSize',
-    priority: 25
+    priority: 35
 )]
-class SelectSizeDecorator extends AbstractFieldBuilderDecorator
+class SizeDecorator extends AbstractFieldBuilderDecorator
 {
     /**
-     * @var int Number of visible options
+     * @var int Input field size (width in characters)
      */
     private int $size;
 
     /**
      * Constructor.
      *
-     * @param int $size Number of visible options
+     * @param int $size Input field size
      * @param int|null $priority Optional priority override
      */
     public function __construct(int $size, ?int $priority = null)

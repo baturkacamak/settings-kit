@@ -2,12 +2,18 @@
 
 namespace WPSettingsKit\Validation\Rules\Text;
 
+use WPSettingsKit\Attribute\ValidationRule;
 use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
  * Validates that a string represents a valid IP address.
  */
-class IpAddressValidator implements IValidationRule
+#[ValidationRule(
+    type: ['text', 'ip'],
+    method: 'addIpAddressValidation',
+    priority: 35
+)]
+class IpAddressValidationRule implements IValidationRule
 {
     /**
      * @var bool Whether to allow only IPv4 addresses.
@@ -20,15 +26,37 @@ class IpAddressValidator implements IValidationRule
     private readonly bool $ipv6Only;
 
     /**
+     * @var string Custom error message
+     */
+    private readonly string $customMessage;
+
+    /**
      * Constructor for IpAddressValidator.
      *
      * @param bool $ipv4Only Whether to allow only IPv4 addresses.
      * @param bool $ipv6Only Whether to allow only IPv6 addresses.
+     * @param string|null $customMessage Optional custom error message.
      */
-    public function __construct(bool $ipv4Only = false, bool $ipv6Only = false)
+    public function __construct(bool $ipv4Only = false, bool $ipv6Only = false, ?string $customMessage = null)
     {
+        if ($ipv4Only && $ipv6Only) {
+            throw new \InvalidArgumentException("IP validator cannot be both IPv4-only and IPv6-only");
+        }
+
         $this->ipv4Only = $ipv4Only;
         $this->ipv6Only = $ipv6Only;
+
+        if ($customMessage === null) {
+            if ($ipv4Only) {
+                $this->customMessage = __('Please enter a valid IPv4 address.', 'wp-settings-kit');
+            } elseif ($ipv6Only) {
+                $this->customMessage = __('Please enter a valid IPv6 address.', 'wp-settings-kit');
+            } else {
+                $this->customMessage = __('Please enter a valid IP address.', 'wp-settings-kit');
+            }
+        } else {
+            $this->customMessage = $customMessage;
+        }
     }
 
     /**
@@ -62,13 +90,7 @@ class IpAddressValidator implements IValidationRule
      */
     public function getMessage(): string
     {
-        if ($this->ipv4Only) {
-            return __('Please enter a valid IPv4 address.', 'settings-manager');
-        } elseif ($this->ipv6Only) {
-            return __('Please enter a valid IPv6 address.', 'settings-manager');
-        }
-
-        return __('Please enter a valid IP address.', 'settings-manager');
+        return apply_filters('wp_settings_ip_address_validator_message', $this->customMessage);
     }
 
     /**
@@ -90,7 +112,8 @@ class IpAddressValidator implements IValidationRule
     {
         return [
             'ipv4Only' => $this->ipv4Only,
-            'ipv6Only' => $this->ipv6Only
+            'ipv6Only' => $this->ipv6Only,
+            'customMessage' => $this->customMessage
         ];
     }
 }
