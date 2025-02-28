@@ -32,16 +32,17 @@ class PlaceholderDecorator extends AbstractFieldBuilderDecorator
         $this->placeholder = $placeholder;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function getConfigModifications(): array
+    protected function getConfigValues(): array
     {
         return [
             'placeholder' => $this->placeholder,
-            'attributes' => [
-                'placeholder' => $this->placeholder
-            ]
+        ];
+    }
+
+    protected function getAttributeValues(): array
+    {
+        return [
+            'placeholder' => $this->placeholder,
         ];
     }
 }

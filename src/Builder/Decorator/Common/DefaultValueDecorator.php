@@ -13,8 +13,7 @@ use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
     method: 'setDefaultValue',
     priority: 1
 )]
-class DefaultValueDecorator extends AbstractFieldBuilderDecorator
-{
+class DefaultValueDecorator extends AbstractFieldBuilderDecorator {
     /**
      * @var mixed Default value
      */
@@ -26,27 +25,18 @@ class DefaultValueDecorator extends AbstractFieldBuilderDecorator
      * @param mixed $defaultValue Default value
      * @param int|null $priority Optional priority override
      */
-    public function __construct(mixed $defaultValue, ?int $priority = null)
-    {
-        parent::__construct($priority);
+    public function __construct(mixed $defaultValue, ?int $priority = null) {
+        parent::__construct($priority, 'all');
         $this->defaultValue = $defaultValue;
     }
 
     /**
-     * {@inheritdoc}
+     * Apply custom logic for default value.
+     *
+     * @param array<string, mixed> $config Current configuration
+     * @return array<string, mixed> Modified configuration
      */
-    protected function getConfigModifications(): array
-    {
-        return [
-            'value' => $this->defaultValue
-        ];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function applyToConfig(array $config): array
-    {
+    protected function applyCustomLogic(array $config): array {
         // Only set the value if not already set
         if (!isset($config['value'])) {
             $config['value'] = $this->defaultValue;

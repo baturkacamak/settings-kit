@@ -42,8 +42,7 @@ class OptionsDecorator extends AbstractFieldBuilderDecorator
     /**
      * {@inheritdoc}
      */
-    public function applyToConfig(array $config): array
-    {
+    protected function applyCustomLogic(array $config): array {
         // Merge with existing options if not replacing
         if (!$this->replace && isset($config['options']) && is_array($config['options'])) {
             $config['options'] = array_merge($config['options'], $this->options);
@@ -52,15 +51,5 @@ class OptionsDecorator extends AbstractFieldBuilderDecorator
         }
 
         return $config;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function getConfigModifications(): array
-    {
-        // This is not used in the OptionsDecorator since it requires
-        // custom handling in applyToConfig
-        return [];
     }
 }

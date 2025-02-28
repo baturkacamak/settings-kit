@@ -34,26 +34,28 @@ class PrefixSuffixDecorator extends AbstractFieldBuilderDecorator
      */
     public function __construct(?string $prefix = null, ?string $suffix = null, ?int $priority = null)
     {
-        parent::__construct($priority);
+        parent::__construct($priority, ['text', 'number']);
         $this->prefix = $prefix;
         $this->suffix = $suffix;
     }
 
     /**
-     * {@inheritdoc}
+     * Get configuration values.
+     *
+     * @return array<string, mixed> Configuration values
      */
-    protected function getConfigModifications(): array
+    protected function getConfigValues(): array
     {
-        $modifications = [];
+        $values = [];
 
         if ($this->prefix !== null) {
-            $modifications['prefix'] = $this->prefix;
+            $values['prefix'] = $this->prefix;
         }
 
         if ($this->suffix !== null) {
-            $modifications['suffix'] = $this->suffix;
+            $values['suffix'] = $this->suffix;
         }
 
-        return $modifications;
+        return $values;
     }
 }

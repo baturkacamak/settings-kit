@@ -34,15 +34,18 @@ class SingleOptionDecorator extends AbstractFieldBuilderDecorator
      */
     public function __construct(string $key, string $label, ?int $priority = null)
     {
-        parent::__construct($priority);
-        $this->key = $key;
+        parent::__construct($priority, 'select');
+        $this->key   = $key;
         $this->label = $label;
     }
 
     /**
-     * {@inheritdoc}
+     * Apply custom logic for adding a single option.
+     *
+     * @param array<string, mixed> $config Current configuration
+     * @return array<string, mixed> Modified configuration
      */
-    public function applyToConfig(array $config): array
+    protected function applyCustomLogic(array $config): array
     {
         // Initialize options array if it doesn't exist
         if (!isset($config['options'])) {
@@ -53,15 +56,5 @@ class SingleOptionDecorator extends AbstractFieldBuilderDecorator
         $config['options'][$this->key] = $this->label;
 
         return $config;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function getConfigModifications(): array
-    {
-        // This is not used in the SingleOptionDecorator since it requires
-        // custom handling in applyToConfig
-        return [];
     }
 }

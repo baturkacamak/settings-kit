@@ -13,8 +13,7 @@ use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
     method: 'setOptionGroups',
     priority: 15
 )]
-class OptionGroupsDecorator extends AbstractFieldBuilderDecorator
-{
+class OptionGroupsDecorator extends AbstractFieldBuilderDecorator {
     /**
      * @var array<string, array<string, string>> Option groups (group label => [key => value])
      */
@@ -32,18 +31,19 @@ class OptionGroupsDecorator extends AbstractFieldBuilderDecorator
      * @param bool $replace Whether to replace existing option groups
      * @param int|null $priority Optional priority override
      */
-    public function __construct(array $optionGroups, bool $replace = true, ?int $priority = null)
-    {
-        parent::__construct($priority);
+    public function __construct(array $optionGroups, bool $replace = true, ?int $priority = null) {
+        parent::__construct($priority, 'select');
         $this->optionGroups = $optionGroups;
         $this->replace = $replace;
     }
 
     /**
-     * {@inheritdoc}
+     * Apply custom logic for option groups.
+     *
+     * @param array<string, mixed> $config Current configuration
+     * @return array<string, mixed> Modified configuration
      */
-    public function applyToConfig(array $config): array
-    {
+    protected function applyCustomLogic(array $config): array {
         // Merge with existing option groups if not replacing
         if (!$this->replace && isset($config['option_groups']) && is_array($config['option_groups'])) {
             $config['option_groups'] = array_merge($config['option_groups'], $this->optionGroups);
@@ -52,15 +52,5 @@ class OptionGroupsDecorator extends AbstractFieldBuilderDecorator
         }
 
         return $config;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function getConfigModifications(): array
-    {
-        // This is not used in the OptionGroupsDecorator since it requires
-        // custom handling in applyToConfig
-        return [];
     }
 }

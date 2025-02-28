@@ -13,8 +13,7 @@ use WPSettingsKit\Builder\Decorator\AbstractFieldBuilderDecorator;
     method: 'setPlaceholder',
     priority: 5
 )]
-class SelectPlaceholderDecorator extends AbstractFieldBuilderDecorator
-{
+class SelectPlaceholderDecorator extends AbstractFieldBuilderDecorator {
     /**
      * @var string Placeholder text
      */
@@ -26,7 +25,7 @@ class SelectPlaceholderDecorator extends AbstractFieldBuilderDecorator
     private bool $disabled;
 
     /**
-     * @var string|null Value for the placeholder option (default: '')
+     * @var string|null Value for the placeholder option
      */
     private ?string $value;
 
@@ -35,7 +34,7 @@ class SelectPlaceholderDecorator extends AbstractFieldBuilderDecorator
      *
      * @param string $placeholder Placeholder text
      * @param bool $disabled Whether the placeholder option is disabled
-     * @param string|null $value Value for the placeholder option (default: '')
+     * @param string|null $value Value for the placeholder option
      * @param int|null $priority Optional priority override
      */
     public function __construct(
@@ -44,17 +43,20 @@ class SelectPlaceholderDecorator extends AbstractFieldBuilderDecorator
         ?string $value = '',
         ?int $priority = null
     ) {
-        parent::__construct($priority);
+        parent::__construct($priority, 'select');
         $this->placeholder = $placeholder;
         $this->disabled = $disabled;
         $this->value = $value;
     }
 
     /**
-     * {@inheritdoc}
+     * Apply custom logic for select placeholder.
+     *
+     * @param array<string, mixed> $config Current configuration
+     * @return array<string, mixed> Modified configuration
      */
-    public function applyToConfig(array $config): array
-    {
+    protected function applyCustomLogic(array $config): array {
+        // Add placeholder configuration
         $config['placeholder'] = $this->placeholder;
         $config['placeholder_disabled'] = $this->disabled;
 
@@ -80,15 +82,5 @@ class SelectPlaceholderDecorator extends AbstractFieldBuilderDecorator
         }
 
         return $config;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function getConfigModifications(): array
-    {
-        // This is not used in the SelectPlaceholderDecorator since it requires
-        // custom handling in applyToConfig
-        return [];
     }
 }

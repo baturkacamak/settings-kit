@@ -35,8 +35,44 @@ abstract class AbstractFieldBuilderDecorator implements IFieldBuilderDecorator
      */
     public function __construct(?int $priority = null, string|array|null $fieldTypes = null)
     {
-        $this->priority = $priority ?? $this->getPriorityFromAttribute();
+        $this->priority   = $priority ?? $this->getPriorityFromAttribute();
         $this->fieldTypes = $fieldTypes ?? $this->getFieldTypesFromAttribute();
+    }
+
+    /**
+     * Gets the priority from the FieldDecorator attribute.
+     *
+     * @return int The priority value (defaults to 10)
+     */
+    protected function getPriorityFromAttribute(): int
+    {
+        $reflectionClass = new ReflectionClass($this);
+        $attributes      = $reflectionClass->getAttributes(FieldDecorator::class);
+
+        if (empty($attributes)) {
+            return 10;
+        }
+
+        $attribute = $attributes[0]->newInstance();
+        return $attribute->priority;
+    }
+
+    /**
+     * Gets the field types from the FieldDecorator attribute.
+     *
+     * @return string|array<string> The field type(s) (defaults to 'all')
+     */
+    protected function getFieldTypesFromAttribute(): string|array
+    {
+        $reflectionClass = new ReflectionClass($this);
+        $attributes      = $reflectionClass->getAttributes(FieldDecorator::class);
+
+        if (empty($attributes)) {
+            return 'all';
+        }
+
+        $attribute = $attributes[0]->newInstance();
+        return $attribute->type;
     }
 
     /**
@@ -56,32 +92,72 @@ abstract class AbstractFieldBuilderDecorator implements IFieldBuilderDecorator
     }
 
     /**
-     * {@inheritdoc}
+     * Applies this decorator to a field configuration.
      *
-     * Standard implementation that modifies the config array based on decorator-specific values.
-     * Subclasses should override getConfigModifications() instead of this method.
+     * @param array<string, mixed> $config Current configuration
+     * @return array<string, mixed> Modified configuration
      */
     public function applyToConfig(array $config): array
     {
-        $modifications = $this->getConfigModifications();
+        // Apply direct config modifications
+        $config = $this->applyConfigValues($config);
 
-        // Apply primary config values
-        foreach ($modifications as $key => $value) {
+        // Apply attribute modifications
+        $config = $this->applyAttributeValues($config);
+
+        // Apply any additional modifications
+        $config = $this->applyCustomLogic($config);
+
+        return $config;
+    }
+
+    /**
+     * Apply direct configuration values.
+     *
+     * @param array<string, mixed> $config Current configuration
+     * @return array<string, mixed> Modified configuration
+     */
+    protected function applyConfigValues(array $config): array
+    {
+        foreach ($this->getConfigValues() as $key => $value) {
+            // Skip attributes, they're handled separately
             if ($key !== 'attributes') {
                 $config[$key] = $value;
             }
         }
 
-        // Handle attributes specially for proper merging
-        if (isset($modifications['attributes']) && is_array($modifications['attributes'])) {
+        return $config;
+    }
+
+    /**
+     * Gets direct configuration values to apply.
+     *
+     * @return array<string, mixed> Configuration values
+     */
+    protected function getConfigValues(): array
+    {
+        return [];
+    }
+
+    /**
+     * Apply attribute values.
+     *
+     * @param array<string, mixed> $config Current configuration
+     * @return array<string, mixed> Modified configuration
+     */
+    protected function applyAttributeValues(array $config): array
+    {
+        $attributes = $this->getAttributeValues();
+
+        if (!empty($attributes)) {
             if (!isset($config['attributes'])) {
                 $config['attributes'] = [];
             }
 
-            foreach ($modifications['attributes'] as $attrName => $attrValue) {
+            foreach ($attributes as $attrName => $attrValue) {
                 if ($attrValue === null) {
                     unset($config['attributes'][$attrName]);
-                } else if ($attrValue === true) {
+                } elseif ($attrValue === true) {
                     $config['attributes'][$attrName] = $attrName;
                 } else {
                     $config['attributes'][$attrName] = $attrValue;
@@ -93,47 +169,24 @@ abstract class AbstractFieldBuilderDecorator implements IFieldBuilderDecorator
     }
 
     /**
-     * Gets config modifications specific to this decorator.
+     * Gets attribute values to apply.
      *
-     * Subclasses should implement this method instead of overriding applyToConfig.
-     *
-     * @return array<string, mixed> Config modifications to apply
+     * @return array<string, mixed> Attribute values
      */
-    abstract protected function getConfigModifications(): array;
-
-    /**
-     * Gets the priority from the FieldDecorator attribute.
-     *
-     * @return int The priority value (defaults to 10)
-     */
-    protected function getPriorityFromAttribute(): int
+    protected function getAttributeValues(): array
     {
-        $reflectionClass = new ReflectionClass($this);
-        $attributes = $reflectionClass->getAttributes(FieldDecorator::class);
-
-        if (empty($attributes)) {
-            return 10;
-        }
-
-        $attribute = $attributes[0]->newInstance();
-        return $attribute->priority;
+        return [];
     }
 
     /**
-     * Gets the field types from the FieldDecorator attribute.
+     * Apply any custom logic beyond simple key-value pairs.
+     * Default implementation does nothing.
      *
-     * @return string|array<string> The field type(s) (defaults to 'all')
+     * @param array<string, mixed> $config Current configuration
+     * @return array<string, mixed> Modified configuration
      */
-    protected function getFieldTypesFromAttribute(): string|array
+    protected function applyCustomLogic(array $config): array
     {
-        $reflectionClass = new ReflectionClass($this);
-        $attributes = $reflectionClass->getAttributes(FieldDecorator::class);
-
-        if (empty($attributes)) {
-            return 'all';
-        }
-
-        $attribute = $attributes[0]->newInstance();
-        return $attribute->type;
+        return $config;
     }
 }
