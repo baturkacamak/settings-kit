@@ -60,7 +60,7 @@ class FieldGroup extends AbstractField
 
         $html .= '</div>';
 
-        return $this->decorator ? $this->decorator->decorate($html, $this) : $html;
+        return $this->enhancer ? $this->enhancer->decorate($html, $this) : $html;
     }
 
     /**

@@ -2,8 +2,8 @@
 
 namespace WPSettingsKit\Builder;
 
-use WPSettingsKit\Builder\Decorator\SelectField\OptionsDecorator;
-use WPSettingsKit\Builder\Decorator\SelectField\SingleOptionDecorator;
+use WPSettingsKit\Builder\Enhancer\SelectField\OptionsEnhancer;
+use WPSettingsKit\Builder\Enhancer\SelectField\SingleOptionEnhancer;
 use WPSettingsKit\Field\Base\Interface\IField;
 use WPSettingsKit\Field\Basic\SelectField;
 use WPSettingsKit\Validation\Rules\SelectField\OptionExistsValidator;
@@ -11,7 +11,7 @@ use WPSettingsKit\Validation\Rules\SelectField\MaxSelectionsValidator;
 use WPSettingsKit\Validation\Rules\SelectField\MinSelectionsValidator;
 
 /**
- * Builder for select fields with automatic decorator support.
+ * Builder for select fields with automatic enhancer support.
  *
  * Provides a fluent interface for configuring and building select field objects.
  */
@@ -36,7 +36,7 @@ class SelectFieldBuilder extends BaseFieldBuilder
      */
     public function setOptions(array $options): self
     {
-        return $this->addDecorator(new OptionsDecorator($options));
+        return $this->addEnhancer(new OptionsEnhancer($options));
     }
 
     /**
@@ -48,7 +48,7 @@ class SelectFieldBuilder extends BaseFieldBuilder
      */
     public function addOption(string $key, string $label): self
     {
-        return $this->addDecorator(new SingleOptionDecorator($key, $label));
+        return $this->addEnhancer(new SingleOptionEnhancer($key, $label));
     }
 
     /**
@@ -105,10 +105,10 @@ class SelectFieldBuilder extends BaseFieldBuilder
             return $this->config['options'];
         }
 
-        // Look through decorators for options
-        foreach ($this->decorators as $decorator) {
-            if ($decorator instanceof OptionsDecorator) {
-                return $decorator->getOptions();
+        // Look through enhancers for options
+        foreach ($this->enhancers as $enhancer) {
+            if ($enhancer instanceof OptionsEnhancer) {
+                return $enhancer->getOptions();
             }
         }
 

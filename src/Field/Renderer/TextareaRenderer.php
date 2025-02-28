@@ -40,8 +40,8 @@ class TextareaRenderer implements IFieldRenderer
             $field->buildAttributeString($attributes),
             esc_textarea($field->getValue() ?? '')
         );
-        $decorator = (fn() => $this->decorator)->call($field);
-        $html = $decorator ? $decorator->decorate($html, $field) : $html;
+        $enhancer = (fn() => $this->enhancer)->call($field);
+        $html = $enhancer ? $enhancer->decorate($html, $field) : $html;
         return apply_filters('wp_settings_field_render_textarea', $html, $field, $attributes);
     }
 }

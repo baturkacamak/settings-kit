@@ -48,7 +48,7 @@ class TextareaField extends AbstractField
             esc_textarea($this->getValue() ?? '')
         );
 
-        return $this->decorator ? $this->decorator->decorate($html, $this) : $html;
+        return $this->enhancer ? $this->enhancer->decorate($html, $this) : $html;
     }
 
     /**

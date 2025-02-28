@@ -42,7 +42,7 @@ class CheckboxField extends AbstractField
             $config['validation_rules'] ?? [],
             $config['dependencies'] ?? [],
             $config['transformer'] ?? null,
-            $config['decorator'] ?? null,
+            $config['enhancer'] ?? null,
             $config['event_dispatcher'] ?? null,
             $config['renderer'] ?? null
         );
@@ -74,7 +74,7 @@ class CheckboxField extends AbstractField
             htmlspecialchars($this->uncheckedValue)
         );
 
-        return $this->decorator ? $this->decorator->decorate($html, $this) : $html;
+        return $this->enhancer ? $this->enhancer->decorate($html, $this) : $html;
     }
 
     /**

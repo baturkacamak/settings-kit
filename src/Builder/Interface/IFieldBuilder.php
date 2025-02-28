@@ -10,12 +10,12 @@ use WPSettingsKit\Field\Base\Interface\IField;
 interface IFieldBuilder
 {
     /**
-     * Add a decorator to the builder
+     * Add a enhancer to the builder
      *
-     * @param IFieldBuilderDecorator $decorator Decorator to add
+     * @param IFieldBuilderEnhancer $enhancer Enhancer to add
      * @return self
      */
-    public function addDecorator(IFieldBuilderDecorator $decorator): self;
+    public function addEnhancer(IFieldBuilderEnhancer $enhancer): self;
 
     /**
      * Build and return the field

@@ -2,13 +2,13 @@
 
 namespace WPSettingsKit\Builder;
 
-use WPSettingsKit\Builder\Decorator\CheckboxField\CheckedValueDecorator;
-use WPSettingsKit\Builder\Decorator\CheckboxField\UncheckedValueDecorator;
+use WPSettingsKit\Builder\Enhancer\CheckboxField\CheckedValueEnhancer;
+use WPSettingsKit\Builder\Enhancer\CheckboxField\UncheckedValueEnhancer;
 use WPSettingsKit\Field\Base\Interface\IField;
 use WPSettingsKit\Field\Basic\CheckboxField;
 
 /**
- * Builder for checkbox fields with automatic decorator support.
+ * Builder for checkbox fields with automatic enhancer support.
  *
  * Provides a fluent interface for configuring and building checkbox field objects.
  */
@@ -45,7 +45,7 @@ class CheckboxFieldBuilder extends BaseFieldBuilder
      */
     public function setCheckedValue(mixed $value): self
     {
-        return $this->addDecorator(new CheckedValueDecorator($value));
+        return $this->addEnhancer(new CheckedValueEnhancer($value));
     }
 
     /**
@@ -56,7 +56,7 @@ class CheckboxFieldBuilder extends BaseFieldBuilder
      */
     public function setUncheckedValue(mixed $value): self
     {
-        return $this->addDecorator(new UncheckedValueDecorator($value));
+        return $this->addEnhancer(new UncheckedValueEnhancer($value));
     }
 
     /**

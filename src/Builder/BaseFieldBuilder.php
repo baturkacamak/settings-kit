@@ -5,16 +5,16 @@ namespace WPSettingsKit\Builder;
 use ReflectionClass;
 use ReflectionMethod;
 use WPSettingsKit\Builder\Interface\IFieldBuilder;
-use WPSettingsKit\Builder\Interface\IFieldBuilderDecorator;
+use WPSettingsKit\Builder\Interface\IFieldBuilderEnhancer;
 use WPSettingsKit\Exception\BuilderException;
-use WPSettingsKit\Registry\DecoratorRegistry;
+use WPSettingsKit\Registry\EnhancerRegistry;
 use WPSettingsKit\Validation\Base\Interface\IValidationRule;
 
 /**
- * Base field builder with automatic decorator discovery and application.
+ * Base field builder with automatic enhancer discovery and application.
  *
  * Implements the builder pattern for creating field objects with a fluent interface.
- * Supports PHP 8 attributes and automatic decorator discovery.
+ * Supports PHP 8 attributes and automatic enhancer discovery.
  */
 abstract class BaseFieldBuilder implements IFieldBuilder
 {
@@ -24,9 +24,9 @@ abstract class BaseFieldBuilder implements IFieldBuilder
     protected array $config = [];
 
     /**
-     * @var array<IFieldBuilderDecorator> Decorators to apply
+     * @var array<IFieldBuilderEnhancer> enhancers to apply
      */
-    protected array $decorators = [];
+    protected array $enhancers = [];
 
     /**
      * @var string The field type (text, select, checkbox, etc.)
@@ -46,25 +46,25 @@ abstract class BaseFieldBuilder implements IFieldBuilder
         $this->config['label'] = $label;
         $this->fieldType       = $fieldType;
 
-        // Ensure decorators have been discovered
-        $this->setupAutomaticDecorators();
+        // Ensure enhancers have been discovered
+        $this->setupAutomaticEnhancers();
     }
 
     /**
-     * Sets up automatic decorator application through magic method interception.
+     * Sets up automatic enhancer application through magic method interception.
      *
      * @return void
      */
-    protected function setupAutomaticDecorators(): void
+    protected function setupAutomaticEnhancers(): void
     {
-        // Ensure decorators have been discovered
-        if (!DecoratorRegistry::isDiscovered()) {
-            DecoratorRegistry::discoverDecorators('WPSettingsKit\\Builder\\Decorator');
+        // Ensure enhancers have been discovered
+        if (!EnhancerRegistry::isDiscovered()) {
+            EnhancerRegistry::discoverEnhancers('WPSettingsKit\\Builder\\Enhancer');
         }
     }
 
     /**
-     * Intercepts method calls to apply automatic decorators.
+     * Intercepts method calls to apply automatic enhancers.
      *
      * @param string $name Method name
      * @param array<mixed> $arguments Method arguments
@@ -78,50 +78,50 @@ abstract class BaseFieldBuilder implements IFieldBuilder
             return call_user_func_array([$this, $name], $arguments);
         }
 
-        // Then try to find a decorator for this method
-        $decoratorClass = DecoratorRegistry::getDecorator($this->fieldType, $name);
+        // Then try to find a enhancer for this method
+        $enhancerClass = EnhancerRegistry::getEnhancer($this->fieldType, $name);
 
-        if ($decoratorClass !== null) {
-            // Create and apply the decorator
-            $decorator = $this->createDecoratorInstance($decoratorClass, $arguments);
-            return $this->addDecorator($decorator);
+        if ($enhancerClass !== null) {
+            // Create and apply the enhancer
+            $enhancer = $this->createEnhancerInstance($enhancerClass, $arguments);
+            return $this->addEnhancer($enhancer);
         }
 
         throw new BuilderException("Method '{$name}' not found in " . get_class($this));
     }
 
     /**
-     * Creates a decorator instance with the provided arguments.
+     * Creates a enhancer instance with the provided arguments.
      *
-     * @param string $decoratorClass The decorator class name
+     * @param string $enhancerClass The enhancer class name
      * @param array<mixed> $arguments Constructor arguments
-     * @return IFieldBuilderDecorator The decorator instance
+     * @return IFieldBuilderEnhancer The enhancer instance
      * @throws BuilderException If creation fails
      */
-    protected function createDecoratorInstance(string $decoratorClass, array $arguments): IFieldBuilderDecorator
+    protected function createEnhancerInstance(string $enhancerClass, array $arguments): IFieldBuilderEnhancer
     {
         try {
-            $reflectionClass = new ReflectionClass($decoratorClass);
+            $reflectionClass = new ReflectionClass($enhancerClass);
 
-            if (!$reflectionClass->implementsInterface(IFieldBuilderDecorator::class)) {
-                throw new BuilderException("Class '{$decoratorClass}' does not implement IFieldBuilderDecorator");
+            if (!$reflectionClass->implementsInterface(IFieldBuilderEnhancer::class)) {
+                throw new BuilderException("Class '{$enhancerClass}' does not implement IFieldBuilderEnhancer");
             }
 
             return $reflectionClass->newInstanceArgs($arguments);
         } catch (\ReflectionException $e) {
-            throw new BuilderException("Failed to create decorator instance: " . $e->getMessage(), 0, $e);
+            throw new BuilderException("Failed to create enhancer instance: " . $e->getMessage(), 0, $e);
         }
     }
 
     /**
-     * Add a decorator to the builder
+     * Add a enhancer to the builder
      *
-     * @param IFieldBuilderDecorator $decorator Decorator to add
+     * @param IFieldBuilderEnhancer $enhancer Enhancer to add
      * @return self
      */
-    public function addDecorator(IFieldBuilderDecorator $decorator): self
+    public function addEnhancer(IFieldBuilderEnhancer $enhancer): self
     {
-        $this->decorators[] = $decorator;
+        $this->enhancers[] = $enhancer;
         return $this;
     }
 
@@ -152,7 +152,7 @@ abstract class BaseFieldBuilder implements IFieldBuilder
     }
 
     /**
-     * Gets all available builder methods for this field type, including automatic decorators.
+     * Gets all available builder methods for this field type, including automatic enhancers.
      *
      * @return array<string> Array of method names
      */
@@ -168,9 +168,9 @@ abstract class BaseFieldBuilder implements IFieldBuilder
             }
         }
 
-        // Get decorator methods
-        $decorators = DecoratorRegistry::getDecoratorsForType($this->fieldType);
-        foreach ($decorators as $method => $decoratorClasses) {
+        // Get enhancer methods
+        $enhancers = EnhancerRegistry::getEnhancersForType($this->fieldType);
+        foreach ($enhancers as $method => $enhancer) {
             $methods[] = $method;
         }
 
@@ -178,7 +178,7 @@ abstract class BaseFieldBuilder implements IFieldBuilder
     }
 
     /**
-     * Get the complete configuration with decorators applied
+     * Get the complete configuration with enhancers applied
      *
      * @return array<string, mixed> Complete field configuration
      * @throws BuilderException If configuration is invalid
@@ -192,9 +192,9 @@ abstract class BaseFieldBuilder implements IFieldBuilder
 
         $finalConfig = $this->config;
 
-        // Apply all decorators to the configuration
-        foreach ($this->decorators as $decorator) {
-            $finalConfig = $decorator->applyToConfig($finalConfig);
+        // Apply all enhancers to the configuration
+        foreach ($this->enhancers as $enhancer) {
+            $finalConfig = $enhancer->applyToConfig($finalConfig);
         }
 
         return $finalConfig;

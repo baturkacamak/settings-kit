@@ -20,8 +20,8 @@ class InputRenderer implements IFieldRenderer
     public function render(AbstractField $field, array $attributes): string
     {
         $html = sprintf('<input %s>', $field->buildAttributeString($attributes));
-        $decorator = (fn() => $this->decorator)->call($field);
-        $html = $decorator ? $decorator->decorate($html, $field) : $html;
+        $enhancer = (fn() => $this->enhancer)->call($field);
+        $html = $enhancer ? $enhancer->decorate($html, $field) : $html;
         return apply_filters('wp_settings_field_render_input', $html, $field, $attributes);
     }
 }

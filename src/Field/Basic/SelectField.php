@@ -55,7 +55,7 @@ class SelectField extends AbstractField
 
         $html .= '</select>';
 
-        return $this->decorator ? $this->decorator->decorate($html, $this) : $html;
+        return $this->enhancer ? $this->enhancer->decorate($html, $this) : $html;
     }
 
     /**

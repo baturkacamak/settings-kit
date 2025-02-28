@@ -45,8 +45,8 @@ class SelectRenderer implements IFieldRenderer
             );
         }
         $html .= '</select>';
-        $decorator = (fn() => $this->decorator)->call($field);
-        $html = $decorator ? $decorator->decorate($html, $field) : $html;
+        $enhancer = (fn() => $this->enhancer)->call($field);
+        $html = $enhancer ? $enhancer->decorate($html, $field) : $html;
         return apply_filters('wp_settings_field_render_select', $html, $field, $attributes, $this->options);
     }
 }

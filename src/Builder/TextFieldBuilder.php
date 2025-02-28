@@ -13,7 +13,7 @@ use WPSettingsKit\Validation\Rules\Text\EmailValidatorEnhanced;
 use WPSettingsKit\Validation\Rules\Text\UrlValidationRule;
 
 /**
- * Builder for text fields with automatic decorator support.
+ * Builder for text fields with automatic enhancer support.
  *
  * Provides a fluent interface for configuring and building text field objects.
  */

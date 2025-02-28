@@ -37,7 +37,7 @@ class TextField extends AbstractField
             $config['validation_rules'] ?? [],
             $config['dependencies'] ?? [],
             $config['transformer'] ?? null,
-            $config['decorator'] ?? null,
+            $config['enhancer'] ?? null,
             $config['event_dispatcher'] ?? null,
             $config['renderer'] ?? null
         );

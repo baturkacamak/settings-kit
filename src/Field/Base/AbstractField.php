@@ -2,7 +2,7 @@
 
 namespace WPSettingsKit\Field\Base;
 
-use WPSettingsKit\Decorator\Interface\IFieldDecorator;
+use WPSettingsKit\Enhancer\Interface\IFieldEnhancer;
 use WPSettingsKit\Event\EventManager;
 use WPSettingsKit\Event\Interface\IFieldEventDispatcher;
 use WPSettingsKit\Exception\ValidationException;
@@ -37,7 +37,7 @@ abstract class AbstractField implements IField
      * @param array<IValidationRule> $validationRules List of validation rules to apply.
      * @param array<IFieldDependency> $dependencies List of field dependencies.
      * @param IValueTransformer|null $transformer Optional transformer for field values.
-     * @param IFieldDecorator|null $decorator Optional decorator for field output.
+     * @param IFieldEnhancer|null $enhancer Optional enhancer for field output.
      * @param IFieldEventDispatcher|null $eventDispatcher Event dispatcher, defaults to a new EventManager if null.
      * @param IFieldRenderer|null $renderer The renderer for HTML output, defaults to a field-specific renderer if null.
      */
@@ -50,13 +50,13 @@ abstract class AbstractField implements IField
         protected array           $validationRules = [],
         protected array           $dependencies = [],
         ?IValueTransformer        $transformer = null,
-        ?IFieldDecorator          $decorator = null,
+        ?IFieldEnhancer           $enhancer = null,
         ?IFieldEventDispatcher    $eventDispatcher = null,
         ?IFieldRenderer           $renderer = null
     )
     {
         $this->transformer     = $transformer;
-        $this->decorator       = $decorator;
+        $this->enhancer        = $enhancer;
         $this->eventDispatcher = $eventDispatcher ?? new EventManager();
         $this->renderer        = $renderer ?? $this->getDefaultRenderer();
         $this->validationChain = new ValidationChain();
