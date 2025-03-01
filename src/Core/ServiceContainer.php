@@ -3,14 +3,14 @@
 namespace WPSettingsKit\Core;
 
 use RuntimeException;
-use WPSettingsKit\WordPress\Core\Interface\IHookService;
-use WPSettingsKit\WordPress\Core\Interface\IOptionService;
-use WPSettingsKit\WordPress\Core\Interface\ISanitizationService;
-use WPSettingsKit\WordPress\Core\Interface\IUserService;
-use WPSettingsKit\WordPress\Core\WPHookService;
-use WPSettingsKit\WordPress\Core\WPOptionService;
-use WPSettingsKit\WordPress\Core\WPSanitizationService;
-use WPSettingsKit\WordPress\Core\WPUserService;
+use WPSettingsKit\Infrastructure\Platform\WordPress\Core\Interface\IHookService;
+use WPSettingsKit\Infrastructure\Platform\WordPress\Core\Interface\IOptionService;
+use WPSettingsKit\Infrastructure\Platform\WordPress\Core\Interface\ISanitizationService;
+use WPSettingsKit\Infrastructure\Platform\WordPress\Core\Interface\IUserService;
+use WPSettingsKit\Infrastructure\Platform\WordPress\Core\WPHookService;
+use WPSettingsKit\Infrastructure\Platform\WordPress\Core\WPOptionService;
+use WPSettingsKit\Infrastructure\Platform\WordPress\Core\WPSanitizationService;
+use WPSettingsKit\Infrastructure\Platform\WordPress\Core\WPUserService;
 
 /**
  * Service container for dependency injection.
