@@ -3,6 +3,8 @@
 namespace WPSettingsKit\WordPress;
 
 use WPSettingsKit\Exception\RepositoryException;
+use WPSettingsKit\Facade\Hook;
+use WPSettingsKit\Facade\Option;
 use WPSettingsKit\WordPress\Interface\ISettingsRepository;
 
 /**
@@ -38,7 +40,7 @@ class WPSettingsRepository implements ISettingsRepository
     public function get(string $key): mixed
     {
         $optionName = $this->prefix . $key;
-        return $this->isNetwork ? get_site_option($optionName, null) : get_option($optionName, null);
+        return $this->isNetwork ? get_site_option($optionName, null) : Option::getOption($optionName, null);
     }
 
     /**
@@ -50,7 +52,7 @@ class WPSettingsRepository implements ISettingsRepository
         $optionName = $this->prefix . $key;
         $result     = $this->isNetwork
             ? update_site_option($optionName, $value)
-            : update_option($optionName, $value, $this->autoload);
+            : Option::updateOption($optionName, $value, $this->autoload);
         if (!$result) {
             throw new RepositoryException("Failed to save setting for key: {$key}");
         }
@@ -64,7 +66,7 @@ class WPSettingsRepository implements ISettingsRepository
     public function delete(string $key): bool
     {
         $optionName = $this->prefix . $key;
-        $result     = $this->isNetwork ? delete_site_option($optionName) : delete_option($optionName);
+        $result     = $this->isNetwork ? delete_site_option($optionName) : Option::deleteOption($optionName);
         if (!$result) {
             throw new RepositoryException("Failed to delete setting for key: {$key}");
         }
@@ -91,7 +93,7 @@ class WPSettingsRepository implements ISettingsRepository
         $result = $wpdb->query($sql);
 
         if ($result !== false) {
-            do_action('settings_manager_after_delete_all', $this);
+            Hook::doAction('settings_manager_after_delete_all', $this);
             return true;
         }
 
